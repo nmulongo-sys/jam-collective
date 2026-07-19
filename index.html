@@ -74,20 +74,25 @@
   .carte{background:var(--panel);border:1px solid var(--line);border-radius:var(--rayon);padding:15px 17px;margin-bottom:10px;
     transition:background-color .5s,border-color .5s}
 
-  /* Vignettes projets (fm-card) */
-  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-  .tuile{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--panel);
-    border:1px solid var(--line);border-radius:var(--rayon);padding:20px;position:relative;overflow:hidden;
-    transition:transform .18s ease,box-shadow .18s ease,border-color .25s ease,background-color .5s}
-  .tuile:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 26px rgba(107,74,46,.14)}
-  .tuile .puce{height:44px;width:44px;border-radius:10px;margin-bottom:14px;border:1px solid var(--line);
-    background:repeating-linear-gradient(45deg,var(--chipA),var(--chipA) 6px,var(--chipB) 6px,var(--chipB) 12px)}
-  .tuile .tt{font-family:var(--serif);font-size:1.5rem;line-height:1.05;margin-bottom:2px}
-  .tuile .au{color:var(--acc);font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
-  .tuile .me{color:var(--sub);font-size:.85rem;margin-top:10px}
-  .tuile .go{margin-top:14px;font-family:var(--ui);font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:11px;
-    color:var(--accInk);background:var(--acc);text-align:center;padding:10px;border-radius:8px;transition:background-color .3s}
-  .tuile:hover .go{background:var(--acc2)}
+  /* Vignettes projets — jaquettes de DVD */
+  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:18px}
+  .tuile{position:relative;display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    aspect-ratio:27/40;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--panel);
+    box-shadow:0 4px 14px rgba(107,74,46,.16);transition:transform .2s ease,box-shadow .2s ease}
+  .tuile:hover{transform:translateY(-5px) rotate(-.6deg);box-shadow:0 16px 32px rgba(107,74,46,.28)}
+  .tuile .spine{position:absolute;left:0;top:0;bottom:0;width:11px;z-index:2;
+    background:linear-gradient(var(--acc),var(--acc2));border-right:1px solid rgba(0,0,0,.2);
+    box-shadow:inset -2px 0 4px rgba(0,0,0,.18)}
+  .tuile .art{position:relative;flex:1;margin-left:11px;display:flex;align-items:flex-end;padding:14px;overflow:hidden;
+    background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(255,255,255,.06) 13px 14px),linear-gradient(160deg,var(--acc2),var(--acc))}
+  .tuile .art::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.24),transparent 44%)}
+  .tuile .art .embleme{position:absolute;top:6px;right:12px;font-family:var(--serif);font-size:2.6rem;color:rgba(255,255,255,.26);line-height:1}
+  .tuile .art .tt{position:relative;font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.02;
+    color:#fff7ec;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+  .tuile .pied{margin-left:11px;background:var(--panel);padding:10px 13px;border-top:1px solid var(--line)}
+  .tuile .au{color:var(--acc);font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tuile .me{color:var(--sub);font-size:.78rem;margin-top:4px}
 
   /* Formulaires */
   input,select,textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
@@ -234,7 +239,8 @@ const ADMIN_CODE = "nightdrive";   /* code de la page Gestion — à changer si 
 const ENTETES = {"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
 
 async function api(chemin, options={}){
-  const rep = await fetch(SB_URL+"/rest/v1/"+chemin, {headers:{...ENTETES,...(options.headers||{})}, ...options});
+  const {headers, ...rest} = options;
+  const rep = await fetch(SB_URL+"/rest/v1/"+chemin, {...rest, headers:{...ENTETES,...(headers||{})}});
   if(!rep.ok){ throw new Error(rep.status+" "+await rep.text()); }
   const b = await rep.text(); return b ? JSON.parse(b) : null;
 }
@@ -254,10 +260,18 @@ let MOI = null;
 try{ MOI = JSON.parse(localStorage.getItem(CLE_MOI)||"null"); }catch(e){ MOI=null; }
 const estAdmin=()=>localStorage.getItem(CLE_ADMIN)==="1";
 
-async function sIdentifier(prenom){
-  prenom=(prenom||"").trim(); if(!prenom) return;
+async function sIdentifier(prenom, nomFamille){
+  prenom=(prenom||"").trim(); nomFamille=(nomFamille||"").trim();
+  if(!prenom) return alerte("Indiquez votre prénom.");
+  if(!nomFamille) return alerte("Indiquez au moins l'initiale de votre nom.");
+  const initiale=nomFamille.charAt(0).toUpperCase();
+  const affiche=prenom+" "+initiale+".";
+  const existe=HUB.personnes.some(p=>p.prenom.toLowerCase()===affiche.toLowerCase());
+  if(existe){
+    if(!confirm("Un « "+affiche+" » est déjà inscrit.\n\n• Si c'est bien vous, cliquez OK.\n• Si c'est un homonyme, annulez et changez d'initiale (ou de prénom) pour éviter la confusion.")) return;
+  }
   try{
-    const [row]=await upsert("hub_personnes",{prenom},"prenom");
+    const [row]=await upsert("hub_personnes",{prenom:affiche},"prenom");
     MOI={id:row.id,prenom:row.prenom};
     localStorage.setItem(CLE_MOI,JSON.stringify(MOI));
     router();
@@ -267,7 +281,7 @@ function seDeconnecter(){ MOI=null; localStorage.removeItem(CLE_MOI); router(); 
 function exigerId(){
   if(MOI) return true;
   alerte("Identifiez-vous d'abord (votre prénom, en haut).");
-  const c=document.getElementById("champ-id"); if(c) c.focus();
+  const c=document.getElementById("champ-prenom"); if(c) c.focus();
   return false;
 }
 
@@ -308,7 +322,9 @@ function rendreNav(){
   if(estAdmin()) liens += lien("#/gestion","Gestion",VUE.nom==="gestion");
   let id = MOI
     ? `Vous êtes <span class="moi">${esc(MOI.prenom)}</span> <button class="discret" onclick="seDeconnecter()">changer</button>`
-    : `<input id="champ-id" type="text" placeholder="Votre prénom" maxlength="30" style="width:130px" onkeydown="if(event.key==='Enter')sIdentifier(this.value)"><button onclick="sIdentifier(document.getElementById('champ-id').value)">S'identifier</button>`;
+    : `<input id="champ-prenom" type="text" placeholder="Prénom" maxlength="24" style="width:104px" onkeydown="if(event.key==='Enter')sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">
+       <input id="champ-nom" type="text" placeholder="Nom" maxlength="24" style="width:84px" onkeydown="if(event.key==='Enter')sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">
+       <button onclick="sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">S'identifier</button>`;
   n.innerHTML = liens + `<span class="id">${id}</span>`;
 }
 
@@ -351,9 +367,9 @@ async function vueAccueil(app){
     const n=AccueilMembres[p.id]||0;
     const meta=[p.tonalite,p.tempo?p.tempo+" BPM":null].filter(Boolean).join(" · ");
     return `<a class="tuile" href="#/p/${enc(p.slug)}">
-      <div class="tt">${esc(p.titre)}</div>
-      <div class="au">${esc(p.auteur||"")}</div>
-      <div class="me">${meta?esc(meta)+" · ":""}${n} participant${n>1?"s":""}</div>
+      <span class="spine" aria-hidden="true"></span>
+      <div class="art"><span class="embleme" aria-hidden="true">♪</span><div class="tt">${esc(p.titre)}</div></div>
+      <div class="pied"><div class="au">${esc(p.auteur||"—")}</div><div class="me">${meta?esc(meta)+" · ":""}${n} participant${n>1?"s":""}</div></div>
     </a>`;
   }).join("")+`</div>` : '<p class="legende">Aucun projet actif pour l\'instant.</p>';
 
