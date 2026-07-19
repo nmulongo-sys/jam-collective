@@ -102,3 +102,9 @@ Note : `index.html` (appli mono-projet Nightcall v5) reste dans le dossier comme
 - **Bug corrigé** : l'auto-rafraîchissement (toutes les 8 s) reconstruisait la vue et effaçait le texte en cours de frappe (ex. lien YouTube). Ajout de `saisieEnCours()` : le rafraîchissement périodique (et celui au retour d'onglet) est suspendu si un champ a le focus, si un champ texte/URL/nombre/date contient du texte, ou si un fichier est sélectionné. Il reprend dès que les champs sont vidés/soumis.
 - **Jaquettes thématiques** : chaque vignette d'accueil (`data-univers`) reprend l'univers de son projet. Nightcall (outrun) = jaquette nuit violette, tranche rose→cyan, titre à halo néon, ligne d'horizon cyan ; projets FM = jaquette caramel. Le « boîtier » (pied crème) reste uniforme, comme une étagère de DVD.
 - Validation headless : 9/9.
+
+### 2026-07-19 — v11 : infobulles + tutoriel première connexion
+- **Infobulles** (`aide()`) : petites pastilles « ? » accessibles (survol *et* focus clavier/tactile) sur les points clés — barre d'identité (prénom + initiale), titre Disponibilités (lecture de la heatmap), Pupitres (niveaux indispensable/souhaitable/bonus), sélecteur d'univers à la création. Bulle sombre lisible, flèche, variante `.bas` pour la nav.
+- **Tutoriel première connexion** : carrousel modal de 7 étapes (bienvenue → identité → choisir un morceau → prendre un pupitre → dispos → partager → c'est à vous), points de progression, Précédent/Suivant/Passer, navigation clavier (←/→/Échap), fermeture au clic sur le fond. S'ouvre automatiquement au tout premier passage (flag `localStorage jam-onboard-vu`) et **rouvrable à tout moment via « Guide »** dans la nav.
+- Nettoyage : suppression des derniers résidus de jetons outrun hors scope (la légende des dispos utilisait encore `--cyan` / « cases les plus vertes » → corrigé en `--acc2` / « les plus foncées »).
+- Validation headless : 16/16 + 5/5 sur le second lot (dernier écran, flag réel, non-réouverture).
