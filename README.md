@@ -77,3 +77,10 @@ Bascule de l'appli mono-projet vers une plateforme (fichier unique `plateforme.h
 **Validation** : 26/26 en headless (slug/route/heatmap/bandeau/tuiles/gestion + rendus du template). Test REST réel : identité, dispo, création projet+seed, adhésion, pupitre principal, suppression en cascade, nettoyage — tous OK.
 
 Note : `index.html` (appli mono-projet Nightcall v5) reste dans le dossier comme référence ; la plateforme la remplace.
+
+### 2026-07-19 — v7 : univers graphique Portail FM + déploiement
+- Re-skin complet de la plateforme dans l'identité du **Portail Formation Musicale** (fini l'outrun synthwave) : palette crème/caramel (`--bg #efe7d8`, `--acc #b3763b`…), variante **sombre** (`#0e0e10` / or `#c9a24b`), polices **Cormorant Garamond** (serif titres) + **Work Sans** (UI) + **JetBrains Mono** (eyebrows), en-tête à **portées musicales** (repeating-linear-gradient), vignettes façon `fm-card` (survol relevé + ombre), badges et heatmap re-teintés caramel.
+- Reprise du **contrat de thème du portail** (`fm/theme.js`) : mêmes jetons, respect de `?theme=clair|sombre` et `localStorage fm-theme`, bouton bascule intégré. La plateforme s'ouvre donc dans le même thème que le portail quand on y accède depuis lui.
+- Fonctions **inchangées** ; seule la couche visuelle a bougé. Validation headless : 23/23 (thème appliqué, bascule clair/sombre, heat caramel, polices, intégrité des fonctions, rendu conservé).
+- **Déployé** sur GitHub Pages : `https://nmulongo-sys.github.io/jam-collective/` (dépôt `nmulongo-sys/jam-collective`, `index.html` = la plateforme).
+- Rappel « Failed to fetch » : c'était l'ouverture en `file://` (le navigateur bloque les requêtes réseau depuis un fichier local). En https (Pages) tout fonctionne.
