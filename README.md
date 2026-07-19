@@ -84,3 +84,9 @@ Note : `index.html` (appli mono-projet Nightcall v5) reste dans le dossier comme
 - Fonctions **inchangées** ; seule la couche visuelle a bougé. Validation headless : 23/23 (thème appliqué, bascule clair/sombre, heat caramel, polices, intégrité des fonctions, rendu conservé).
 - **Déployé** sur GitHub Pages : `https://nmulongo-sys.github.io/jam-collective/` (dépôt `nmulongo-sys/jam-collective`, `index.html` = la plateforme).
 - Rappel « Failed to fetch » : c'était l'ouverture en `file://` (le navigateur bloque les requêtes réseau depuis un fichier local). En https (Pages) tout fonctionne.
+
+### 2026-07-19 — v8 : correctif 401 + identité désambiguïsée + tuiles DVD
+- **Bug 401 corrigé** (« No API key found ») : dans `api()`, `...options` réécrasait les en-têtes fusionnés et supprimait l'`apikey`/`Authorization` sur les écritures (POST/PATCH/upsert). Les lectures passaient, pas les écritures — d'où l'échec à l'identification. Corrigé en fusionnant les en-têtes en dernier.
+- **Identité désambiguïsée** : deux champs **Prénom + Nom** ; l'identité affichée devient « Prénom I. » (initiale du nom forcée). À l'identification, si un homonyme (« Jean D. ») existe déjà, un avertissement propose de confirmer (c'est vous) ou d'annuler et changer d'initiale.
+- **Vignettes en jaquette de DVD** : format portrait (27/40), tranche colorée à gauche, jaquette lustrée (dégradé caramel + reflet + motif portées), titre serif en réserve claire, emblème ♪, pied crème avec auteur (mono) et participants. Survol = léger soulèvement/rotation façon boîtier qu'on sort de l'étagère.
+- Validation headless : 10/10 (apikey conservé sur écriture, identité « Jean D. », alerte homonyme, structure DVD, champs prénom+nom).
