@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jam collective · Formation Musicale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Monoton&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#efe7d8; --panel:#f7f1e6; --panel2:#f0e7d6;
@@ -16,6 +16,7 @@
     --serif:'Cormorant Garamond',Georgia,serif;
     --ui:'Work Sans',system-ui,sans-serif;
     --mono:'JetBrains Mono',ui-monospace,monospace;
+    --display:'Cormorant Garamond',Georgia,serif;
     font-size:16px;
   }
   *{box-sizing:border-box}
@@ -93,6 +94,15 @@
   .tuile .au{color:var(--acc);font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tuile .me{color:var(--sub);font-size:.78rem;margin-top:4px}
+  /* Jaquette qui reprend l'univers du projet */
+  .tuile[data-univers="outrun"] .art{background:
+    repeating-linear-gradient(0deg,transparent 0 13px,rgba(55,224,224,.06) 13px 14px),
+    linear-gradient(165deg,#0d0a1f 0%,#241040 55%,#3d1140 100%)}
+  .tuile[data-univers="outrun"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+    background:linear-gradient(90deg,transparent,#37e0e0,transparent)}
+  .tuile[data-univers="outrun"] .spine{background:linear-gradient(#ff3d8a,#37e0e0)}
+  .tuile[data-univers="outrun"] .art .embleme{color:rgba(55,224,224,.4)}
+  .tuile[data-univers="outrun"] .art .tt{color:#fff7ec;text-shadow:0 0 12px rgba(255,61,138,.7),0 0 26px rgba(55,224,224,.4)}
 
   /* Formulaires */
   input,select,textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
@@ -205,6 +215,42 @@
   #bandeau-alerte{display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
     background:var(--acc2);border:1px solid var(--acc);color:var(--accInk);padding:10px 18px;border-radius:12px;font-size:.9rem;z-index:20;max-width:92%}
   footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 14px;border-top:1px solid var(--line);margin-top:40px;font-family:var(--mono);letter-spacing:.04em}
+
+  /* ===== Thème PAR PROJET (le hub reste FM) ===== */
+  .scope-projet{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:6px;
+    transition:background-color .4s,color .4s,border-color .4s}
+  .projet-hero{position:relative;overflow:hidden;padding:30px 20px 26px;border-bottom:1px solid var(--line)}
+  .projet-hero .hero-in{position:relative;z-index:2}
+  .projet-hero .sun,.projet-hero .horizon{display:none}
+  .projet-hero .staff{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 15px,var(--staff) 15px 16px)}
+  .pt-titre{font-family:var(--display);font-weight:600;font-size:clamp(1.9rem,7vw,3rem);line-height:1.02;margin:0;color:var(--ink)}
+  .pt-sous{color:var(--sub);margin:8px 0 12px;font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+  .scope-projet > section{padding:0 18px;margin-top:26px}
+  .scope-projet > section:first-of-type{margin-top:22px}
+  .scope-projet > section:last-child{padding-bottom:22px}
+
+  /* Univers OUTRUN (Nightcall & co.) */
+  .scope-projet[data-univers="outrun"]{
+    --bg:#0d0a1f; --panel:#171233; --panel2:#1e1840;
+    --ink:#eae6ff; --sub:#9d95c9; --line:#2c2358;
+    --acc:#ff3d8a; --acc2:#37e0e0; --accInk:#0d0a1f;
+    --staff:rgba(55,224,224,.06); --chipA:#241a4d; --chipB:#1a1440;
+    --display:'Monoton',cursive; --serif:'Work Sans',system-ui,sans-serif}
+  .scope-projet[data-univers="outrun"] .projet-hero{text-align:center;
+    background:linear-gradient(180deg,#0d0a1f 0%,#241040 55%,#3d1140 100%)}
+  .scope-projet[data-univers="outrun"] .projet-hero .staff{display:none}
+  .scope-projet[data-univers="outrun"] .sun{display:block;position:absolute;left:50%;bottom:-70px;transform:translateX(-50%);
+    width:220px;height:220px;border-radius:50%;background:linear-gradient(180deg,#ffb45a 0%,#ff3d8a 70%);
+    -webkit-mask:linear-gradient(180deg,#000 0 55%,transparent 55% 58%,#000 58% 66%,transparent 66% 69%,#000 69% 76%,transparent 76% 79%,#000 79% 100%);
+            mask:linear-gradient(180deg,#000 0 55%,transparent 55% 58%,#000 58% 66%,transparent 66% 69%,#000 69% 76%,transparent 76% 79%,#000 79% 100%);opacity:.8}
+  .scope-projet[data-univers="outrun"] .horizon{display:block;position:absolute;left:0;right:0;bottom:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--acc2),transparent)}
+  .scope-projet[data-univers="outrun"] .pt-titre{color:#eae6ff;letter-spacing:.05em;
+    text-shadow:0 0 18px rgba(255,61,138,.55),0 0 40px rgba(55,224,224,.25)}
+  @media (prefers-reduced-motion: no-preference){
+    .scope-projet[data-univers="outrun"] .sun{animation:lever 1.4s ease-out}
+    @keyframes lever{from{transform:translateX(-50%) translateY(60px);opacity:0}to{transform:translateX(-50%);opacity:.8}}
+  }
 </style>
 </head>
 <body>
@@ -366,7 +412,7 @@ async function vueAccueil(app){
   const tuiles = actifs.length ? `<div class="grille">`+actifs.map(p=>{
     const n=AccueilMembres[p.id]||0;
     const meta=[p.tonalite,p.tempo?p.tempo+" BPM":null].filter(Boolean).join(" · ");
-    return `<a class="tuile" href="#/p/${enc(p.slug)}">
+    return `<a class="tuile" data-univers="${esc(p.univers||'fm')}" href="#/p/${enc(p.slug)}">
       <span class="spine" aria-hidden="true"></span>
       <div class="art"><span class="embleme" aria-hidden="true">♪</span><div class="tt">${esc(p.titre)}</div></div>
       <div class="pied"><div class="au">${esc(p.auteur||"—")}</div><div class="me">${meta?esc(meta)+" · ":""}${n} participant${n>1?"s":""}</div></div>
@@ -492,7 +538,10 @@ function vueGestion(app){
       <h2>Créer un projet</h2>
       <div class="carte">
         <div class="ligne"><input id="np-titre" type="text" placeholder="Titre" class="pousse"><input id="np-auteur" type="text" placeholder="Auteur / groupe" class="pousse"></div>
-        <div class="ligne"><input id="np-tonalite" type="text" placeholder="Tonalité (ex. La mineur)" class="pousse"><input id="np-tempo" type="number" placeholder="Tempo (BPM)" style="width:130px"><button onclick="creerProjet()">Créer</button></div>
+        <div class="ligne"><input id="np-tonalite" type="text" placeholder="Tonalité (ex. La mineur)" class="pousse"><input id="np-tempo" type="number" placeholder="Tempo (BPM)" style="width:130px"></div>
+        <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers&nbsp;
+          <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option></select></label>
+          <button onclick="creerProjet()">Créer</button></div>
         <p class="legende" style="margin:10px 0 0">Le projet démarre avec des pupitres de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
       </div>
     </section>
@@ -511,9 +560,10 @@ async function creerProjet(depuis){
   const tonalite=depuis?"":document.getElementById("np-tonalite").value.trim();
   const tempoRaw=depuis?"":document.getElementById("np-tempo").value;
   const tempo=tempoRaw?parseInt(tempoRaw,10):null;
+  const univers=depuis?"fm":((document.getElementById("np-univers")||{}).value||"fm");
   const slug=slugUnique(slugifier(titre));
   try{
-    const [p]=await inserer("hub_projets",{slug,titre,auteur:auteur||null,tonalite:tonalite||null,tempo});
+    const [p]=await inserer("hub_projets",{slug,titre,auteur:auteur||null,tonalite:tonalite||null,tempo,univers});
     await semerPupitres(p.id);
     if(depuis&&depuis.id) await effacer("hub_suggestions","id=eq."+depuis.id);
     location.hash="#/p/"+enc(slug);
@@ -544,16 +594,21 @@ async function vueProjet(app, slug){
   ]);
   PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms};
   const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]];
+  const univers=meta.univers||"fm";
   app.innerHTML=`
     <a class="retour" href="#/">← Tous les projets</a>
-    <section>
-      <div class="pup-tete" style="margin-bottom:6px">
-        <h2 style="margin:0">${esc(meta.titre)}</h2>
-        <button class="inviter" onclick="inviterProjet('${esc(slug)}')">Inviter</button>
+    <div class="scope-projet" data-univers="${esc(univers)}">
+      <div class="projet-hero">
+        <div class="sun" aria-hidden="true"></div><div class="horizon" aria-hidden="true"></div><div class="staff" aria-hidden="true"></div>
+        <div class="hero-in">
+          <h2 class="pt-titre">${esc(meta.titre)}</h2>
+          <p class="pt-sous">${esc(meta.auteur||"")}</p>
+          <button class="inviter" onclick="inviterProjet('${esc(slug)}')">Inviter</button>
+        </div>
       </div>
-      <p class="legende">${esc(meta.auteur||"")}</p>
-      <div class="carte infos">${infos.map(([k,v])=>`<div><span class="cle">${k}</span><div class="val">${esc(v)}</div></div>`).join("")}</div>
-    </section>
+      <section>
+        <div class="carte infos">${infos.map(([k,v])=>`<div><span class="cle">${k}</span><div class="val">${esc(v)}</div></div>`).join("")}</div>
+      </section>
     <section id="pupitres"><h2>Pupitres</h2><p class="legende">Plusieurs personnes par pupitre possible, et vous pouvez en tenir plusieurs.</p><div id="liste-pupitres"></div>
       <div class="carte"><span class="ss-titre">Ajouter un pupitre</span><div class="ligne">
         <input id="np2-nom" type="text" placeholder="Instrument ou rôle">
@@ -575,7 +630,8 @@ async function vueProjet(app, slug){
         <div class="ligne"><input id="nl-url" type="url" placeholder="https://youtube.com/…" inputmode="url"><input id="nl-titre" type="text" placeholder="Titre"><button onclick="ajouterLien()">Partager</button></div></div>
       <div id="liste-liens"></div></section>
     <section id="messages"><h2>Messages</h2><p class="legende">Petit fil entre participants.</p><div id="fil-messages"></div>
-      <div class="ligne"><input id="nm-texte" class="pousse" type="text" placeholder="Votre message…" onkeydown="if(event.key==='Enter')envoyerMessage()"><button onclick="envoyerMessage()">Envoyer</button></div></section>`;
+      <div class="ligne"><input id="nm-texte" class="pousse" type="text" placeholder="Votre message…" onkeydown="if(event.key==='Enter')envoyerMessage()"><button onclick="envoyerMessage()">Envoyer</button></div></section>
+    </div>`;
   rendrePupitres(); rendreParticipants(); rendreRepets(); rendrePartitions(); rendreLiens(); rendreMessages();
 }
 function pid(){ return PROJET.meta.id; }
@@ -769,8 +825,17 @@ fmAppliquer(fmLireInitial());
 
 /* ================= DÉMARRAGE ================= */
 router();
-setInterval(()=>{ if(!document.hidden) rafraichir(); }, 8000);
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) rafraichir(); });
+function saisieEnCours(){
+  const a=document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type!=="button" && a.type!=="submit") return true;
+  const champs=document.querySelectorAll('input[type=text],input[type=url],input[type=number],input[type=datetime-local],textarea');
+  for(const el of champs){ if(el.value && el.value.trim()!=="") return true; }
+  const fichiers=document.querySelectorAll('input[type=file]');
+  for(const el of fichiers){ if(el.files && el.files.length) return true; }
+  return false;
+}
+setInterval(()=>{ if(!document.hidden && !saisieEnCours()) rafraichir(); }, 8000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && !saisieEnCours()) rafraichir(); });
 </script>
 </body>
 </html>
