@@ -90,3 +90,15 @@ Note : `index.html` (appli mono-projet Nightcall v5) reste dans le dossier comme
 - **Identité désambiguïsée** : deux champs **Prénom + Nom** ; l'identité affichée devient « Prénom I. » (initiale du nom forcée). À l'identification, si un homonyme (« Jean D. ») existe déjà, un avertissement propose de confirmer (c'est vous) ou d'annuler et changer d'initiale.
 - **Vignettes en jaquette de DVD** : format portrait (27/40), tranche colorée à gauche, jaquette lustrée (dégradé caramel + reflet + motif portées), titre serif en réserve claire, emblème ♪, pied crème avec auteur (mono) et participants. Survol = léger soulèvement/rotation façon boîtier qu'on sort de l'étagère.
 - Validation headless : 10/10 (apikey conservé sur écriture, identité « Jean D. », alerte homonyme, structure DVD, champs prénom+nom).
+
+### 2026-07-19 — v9 : thème par projet (hub FM, projets à identité propre)
+- Clarification : l'**accueil / hub** (accueil, dispos, gestion, en-tête, nav) reste en univers **Formation Musicale** ; chaque **projet** garde son **identité propre**. Nightcall repasse en **outrun / Kavinsky**.
+- Colonne `univers` ajoutée à `hub_projets` (défaut `'fm'`) ; `nightcall` = `'outrun'`. Sélecteur d'univers (FM crème / Outrun néon) dans le formulaire de création de projet.
+- La page projet est désormais enveloppée dans un conteneur `.scope-projet[data-univers]` : les jetons de couleur/police sont surchargés **localement** (le hub autour n'est pas affecté). Pack outrun = nuit violette, néons rose/cyan/or, titre **Monoton** avec halo, **soleil + horizon** dans le héros (animation « lever »). Pack fm = crème, titres Cormorant, héros à portées, et suit le mode clair/sombre du hub.
+- Héros de projet à identité (soleil outrun / portées FM) remplaçant le simple titre. Le lien « ← Tous les projets » reste hors scope (chrome FM).
+- Validation headless : 14/14 (scope + univers outrun/fm, hub sans scope, tuiles DVD intactes, création avec univers).
+
+### 2026-07-19 — v10 : anti-effacement pendant la saisie + jaquettes thématiques
+- **Bug corrigé** : l'auto-rafraîchissement (toutes les 8 s) reconstruisait la vue et effaçait le texte en cours de frappe (ex. lien YouTube). Ajout de `saisieEnCours()` : le rafraîchissement périodique (et celui au retour d'onglet) est suspendu si un champ a le focus, si un champ texte/URL/nombre/date contient du texte, ou si un fichier est sélectionné. Il reprend dès que les champs sont vidés/soumis.
+- **Jaquettes thématiques** : chaque vignette d'accueil (`data-univers`) reprend l'univers de son projet. Nightcall (outrun) = jaquette nuit violette, tranche rose→cyan, titre à halo néon, ligne d'horizon cyan ; projets FM = jaquette caramel. Le « boîtier » (pied crème) reste uniforme, comme une étagère de DVD.
+- Validation headless : 9/9.
