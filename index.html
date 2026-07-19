@@ -251,6 +251,38 @@
     .scope-projet[data-univers="outrun"] .sun{animation:lever 1.4s ease-out}
     @keyframes lever{from{transform:translateX(-50%) translateY(60px);opacity:0}to{transform:translateX(-50%);opacity:.8}}
   }
+
+  /* ===== Infobulles ===== */
+  .aide{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    border:1px solid var(--line);color:var(--sub);font-size:.66rem;font-weight:700;cursor:help;position:relative;
+    margin-left:6px;vertical-align:middle;font-family:var(--ui);user-select:none}
+  .aide:hover,.aide:focus{border-color:var(--acc);color:var(--acc);outline:none}
+  .aide .bulle{position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%) scale(.96);
+    width:max-content;max-width:230px;background:#241d16;color:#f7f1e6;font-size:.78rem;font-weight:400;line-height:1.45;
+    padding:8px 11px;border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;
+    transition:opacity .15s,transform .15s;z-index:60;text-align:left;letter-spacing:normal;text-transform:none}
+  .aide .bulle::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#241d16}
+  .aide.bas .bulle{bottom:auto;top:calc(100% + 9px)}
+  .aide.bas .bulle::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#241d16}
+  .aide:hover .bulle,.aide:focus .bulle{opacity:1;transform:translateX(-50%) scale(1)}
+
+  /* ===== Tutoriel première connexion ===== */
+  #tuto-overlay{position:fixed;inset:0;background:rgba(20,14,8,.55);z-index:70;display:none;align-items:center;justify-content:center;padding:18px}
+  #tuto-overlay.on{display:flex}
+  .tuto-carte{position:relative;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:18px;
+    max-width:440px;width:100%;padding:26px 24px 18px;box-shadow:0 24px 60px rgba(0,0,0,.35);
+    background-image:repeating-linear-gradient(0deg,transparent 0 15px,var(--staff) 15px 16px)}
+  .tuto-carte .emoji{font-size:2rem;line-height:1}
+  .tuto-carte .num{font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--acc);margin-top:6px}
+  .tuto-carte h3{font-family:var(--serif);font-weight:600;font-size:1.7rem;margin:4px 0 10px;line-height:1.05}
+  .tuto-carte p{color:var(--sub);margin:0;line-height:1.5}
+  .tuto-dots{display:flex;gap:6px;margin:18px 0 14px}
+  .tuto-dots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,width .2s}
+  .tuto-dots i.on{background:var(--acc);width:22px;border-radius:5px}
+  .tuto-actions{display:flex;gap:8px;align-items:center}
+  .tuto-actions .droite{display:flex;gap:8px;margin-left:auto}
+  .tuto-passer{background:transparent;color:var(--sub);border:0;font-size:.85rem;cursor:pointer;padding:8px 4px}
+  .tuto-passer:hover{color:var(--acc)}
 </style>
 </head>
 <body>
@@ -298,6 +330,7 @@ const upsert=(t,l,conflit)=>api(t+"?on_conflict="+conflit,{method:"POST",body:JS
 
 function alerte(txt){const b=document.getElementById("bandeau-alerte");b.textContent=txt;b.style.display="block";clearTimeout(alerte._t);alerte._t=setTimeout(()=>b.style.display="none",5000);}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function aide(txt,bas){ return `<span class="aide${bas?' bas':''}" tabindex="0" role="button" aria-label="Aide : ${esc(txt)}">?<span class="bulle" role="tooltip">${esc(txt)}</span></span>`; }
 const enc=s=>encodeURIComponent(s);
 
 /* ================= IDENTITÉ GLOBALE ================= */
@@ -366,11 +399,12 @@ function rendreNav(){
   const lien=(href,txt,actif)=>`<a href="${href}" class="${actif?"actif":""}">${txt}</a>`;
   let liens = lien("#/","Accueil",VUE.nom==="accueil") + lien("#/dispos","Mes dispos",VUE.nom==="dispos");
   if(estAdmin()) liens += lien("#/gestion","Gestion",VUE.nom==="gestion");
+  liens += `<a href="#" onclick="ouvrirTuto(0);return false;" title="Revoir le guide de démarrage">Guide</a>`;
   let id = MOI
     ? `Vous êtes <span class="moi">${esc(MOI.prenom)}</span> <button class="discret" onclick="seDeconnecter()">changer</button>`
     : `<input id="champ-prenom" type="text" placeholder="Prénom" maxlength="24" style="width:104px" onkeydown="if(event.key==='Enter')sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">
        <input id="champ-nom" type="text" placeholder="Nom" maxlength="24" style="width:84px" onkeydown="if(event.key==='Enter')sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">
-       <button onclick="sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">S'identifier</button>`;
+       <button onclick="sIdentifier(document.getElementById('champ-prenom').value,document.getElementById('champ-nom').value)">S'identifier</button>${aide("Entrez prénom + nom : on affiche « Prénom + initiale » (ex. Jean D.). Pas de mot de passe — la même identité vous suit sur toutes les pages.",true)}`;
   n.innerHTML = liens + `<span class="id">${id}</span>`;
 }
 
@@ -456,7 +490,7 @@ function heatCouleur(ratio){ // 0..1 -> crème -> caramel (accent FM)
   return `rgba(179,118,59,${a.toFixed(2)})`;
 }
 function vueDispos(app){
-  if(!MOI){ app.innerHTML='<section><h2>Mes disponibilités</h2><p class="legende">Identifiez-vous en haut pour saisir vos disponibilités.</p></section>'; return; }
+  if(!MOI){ app.innerHTML='<section><h2>Mes disponibilités${aide("Touchez une case pour marquer un créneau libre. Plus une case est foncée, plus il y a de monde disponible : ce sont les meilleurs moments pour caler une répétition.")}</h2><p class="legende">Identifiez-vous en haut pour saisir vos disponibilités.</p></section>'; return; }
   const mien=disposDe(MOI.id);
   // agrégat par case
   const compte={}, nomsCase={};
@@ -475,8 +509,8 @@ function vueDispos(app){
   }
   app.innerHTML=`
     <section>
-      <h2>Mes disponibilités</h2>
-      <p class="legende">Touchez les créneaux où vous êtes libre <b>en général</b>. La couleur montre combien de personnes sont libres — les cases les plus vertes sont les meilleurs moments pour répéter. Vos dispos valent pour tous les projets.</p>
+      <h2>Mes disponibilités${aide("Touchez une case pour marquer un créneau libre. Plus une case est foncée, plus il y a de monde disponible : ce sont les meilleurs moments pour caler une répétition.")}</h2>
+      <p class="legende">Touchez les créneaux où vous êtes libre <b>en général</b>. La couleur montre combien de personnes sont libres — les cases les plus foncées sont les meilleurs moments pour répéter. Vos dispos valent pour tous les projets.</p>
       <div class="carte">
         <table class="grille-dispo">
           <thead><tr><th></th><th>${CRENEAUX.join("</th><th>")}</th></tr></thead>
@@ -484,7 +518,7 @@ function vueDispos(app){
         </table>
         <div class="legende-heat">
           <span class="echelle"><span style="background:var(--panel2)"></span><span style="background:${heatCouleur(.34)}"></span><span style="background:${heatCouleur(.67)}"></span><span style="background:${heatCouleur(1)}"></span></span>
-          personne → tout le monde &nbsp;·&nbsp; <span style="color:var(--cyan)">contour = vous êtes libre</span>
+          personne → tout le monde &nbsp;·&nbsp; <span style="color:var(--acc2)">contour = vous êtes libre</span>
         </div>
       </div>
     </section>`;
@@ -539,7 +573,7 @@ function vueGestion(app){
       <div class="carte">
         <div class="ligne"><input id="np-titre" type="text" placeholder="Titre" class="pousse"><input id="np-auteur" type="text" placeholder="Auteur / groupe" class="pousse"></div>
         <div class="ligne"><input id="np-tonalite" type="text" placeholder="Tonalité (ex. La mineur)" class="pousse"><input id="np-tempo" type="number" placeholder="Tempo (BPM)" style="width:130px"></div>
-        <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers&nbsp;
+        <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers${aide("L\'ambiance visuelle propre à ce projet : Formation Musicale (crème, sobre) ou Outrun (néon nuit). Le reste de la plateforme n\'est pas affecté.")}&nbsp;
           <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option></select></label>
           <button onclick="creerProjet()">Créer</button></div>
         <p class="legende" style="margin:10px 0 0">Le projet démarre avec des pupitres de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
@@ -609,7 +643,7 @@ async function vueProjet(app, slug){
       <section>
         <div class="carte infos">${infos.map(([k,v])=>`<div><span class="cle">${k}</span><div class="val">${esc(v)}</div></div>`).join("")}</div>
       </section>
-    <section id="pupitres"><h2>Pupitres</h2><p class="legende">Plusieurs personnes par pupitre possible, et vous pouvez en tenir plusieurs.</p><div id="liste-pupitres"></div>
+    <section id="pupitres"><h2>Pupitres${aide("Un pupitre = un instrument ou un rôle. Inscrivez-vous à un ou plusieurs ; plusieurs personnes peuvent tenir le même pupitre. Le niveau (indispensable / souhaitable / bonus) indique son importance pour le morceau.")}</h2><p class="legende">Plusieurs personnes par pupitre possible, et vous pouvez en tenir plusieurs.</p><div id="liste-pupitres"></div>
       <div class="carte"><span class="ss-titre">Ajouter un pupitre</span><div class="ligne">
         <input id="np2-nom" type="text" placeholder="Instrument ou rôle">
         <select id="np2-besoin"><option value="indispensable">indispensable</option><option value="souhaitable" selected>souhaitable</option><option value="bonus">bonus</option></select>
@@ -823,8 +857,51 @@ function fmAppliquer(n){ FM_THEME=(n==="sombre")?"sombre":"clair"; const p=FM_PA
 function toggleTheme(){ fmAppliquer(FM_THEME==="sombre"?"clair":"sombre"); }
 fmAppliquer(fmLireInitial());
 
+/* ================= TUTORIEL PREMIÈRE CONNEXION ================= */
+const TUTO=[
+  {e:"🎵",t:"Bienvenue",c:"Ici, la classe monte des reprises ensemble. Chaque morceau est un « projet » : on s'inscrit aux instruments, on partage partitions et vidéos, et on fixe les répétitions. Ce petit guide fait le tour en quelques écrans."},
+  {e:"🙋",t:"Identifiez-vous",c:"En haut à droite, entrez votre prénom et votre nom. On affiche « Prénom + initiale » (ex. Jean D.). Pas de mot de passe : la même identité vous suit sur toutes les pages. Si un homonyme existe déjà, un message vous prévient."},
+  {e:"💿",t:"Choisissez un morceau",c:"Sur l'accueil, chaque jaquette est un projet — cliquez pour entrer. Vous pouvez aussi proposer un titre depuis la bande du haut. Chaque projet garde sa propre ambiance visuelle."},
+  {e:"🎸",t:"Prenez un pupitre",c:"Dans un projet, inscrivez-vous à un ou plusieurs instruments. Plusieurs personnes peuvent tenir le même pupitre — pas de compétition pour une place."},
+  {e:"📅",t:"Vos disponibilités",c:"L'onglet « Mes dispos » : touchez vos créneaux libres de la semaine. Plus une case est foncée, plus il y a de monde disponible — c'est le meilleur moment pour répéter. Vos dispos valent pour tous les projets."},
+  {e:"🎶",t:"Partagez & échangez",c:"Déposez des partitions (PDF ou image), collez des liens YouTube par pupitre, répondez aux propositions de répétition et discutez dans les messages du projet."},
+  {e:"✨",t:"C'est à vous",c:"Vous pourrez rouvrir ce guide à tout moment via « Guide » en haut. Bonne musique !"}
+];
+let tutoI=0;
+function ouvrirTuto(i){
+  tutoI=i||0;
+  let ov=document.getElementById("tuto-overlay");
+  if(!ov){ ov=document.createElement("div"); ov.id="tuto-overlay";
+    ov.innerHTML='<div class="tuto-carte" role="dialog" aria-modal="true" aria-label="Guide de démarrage"></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click",e=>{ if(e.target===ov) fermerTuto(); });
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") fermerTuto(); else if(document.getElementById("tuto-overlay").classList.contains("on")){ if(e.key==="ArrowRight")tutoNav(1); else if(e.key==="ArrowLeft")tutoNav(-1); } });
+  }
+  ov.classList.add("on"); rendreTuto();
+}
+function rendreTuto(){
+  const s=TUTO[tutoI], dernier=tutoI===TUTO.length-1;
+  const dots=TUTO.map((_,i)=>`<i class="${i===tutoI?'on':''}"></i>`).join("");
+  document.querySelector("#tuto-overlay .tuto-carte").innerHTML=`
+    <div class="emoji" aria-hidden="true">${s.e}</div>
+    <div class="num">Étape ${tutoI+1} / ${TUTO.length}</div>
+    <h3>${esc(s.t)}</h3>
+    <p>${esc(s.c)}</p>
+    <div class="tuto-dots" aria-hidden="true">${dots}</div>
+    <div class="tuto-actions">
+      <button class="tuto-passer" onclick="fermerTuto()">${dernier?'Fermer':'Passer'}</button>
+      <div class="droite">
+        ${tutoI>0?'<button class="discret" onclick="tutoNav(-1)">Précédent</button>':''}
+        <button onclick="${dernier?'fermerTuto()':'tutoNav(1)'}">${dernier?'Commencer 🎶':'Suivant'}</button>
+      </div>
+    </div>`;
+}
+function tutoNav(d){ tutoI=Math.max(0,Math.min(TUTO.length-1,tutoI+d)); rendreTuto(); }
+function fermerTuto(){ const ov=document.getElementById("tuto-overlay"); if(ov) ov.classList.remove("on"); try{localStorage.setItem("jam-onboard-vu","1");}catch(e){} }
+
 /* ================= DÉMARRAGE ================= */
 router();
+try{ if(!localStorage.getItem("jam-onboard-vu")) setTimeout(()=>ouvrirTuto(0),400); }catch(e){}
 function saisieEnCours(){
   const a=document.activeElement;
   if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type!=="button" && a.type!=="submit") return true;
