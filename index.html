@@ -220,6 +220,15 @@
   .audio-item .m{color:var(--sub);font-size:.8rem;margin-top:2px}
   .rec-apercu{margin-top:10px}
 
+  /* Bandeau playlist YouTube */
+  .playlist-ruban{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:6px}
+  .playlist-ruban .pl-txt{flex:1;min-width:180px}
+  .playlist-ruban .pl-txt b{display:block;color:var(--ink)}
+  .playlist-ruban .pl-txt span{color:var(--sub);font-size:.85rem}
+  .playlist-ruban a.pl-btn{display:inline-flex;align-items:center;gap:8px;background:#c0261b;color:#fff;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:9px;white-space:nowrap}
+  .playlist-ruban a.pl-btn:hover{filter:brightness(1.08)}
+  .playlist-ruban a.pl-btn svg{width:20px;height:20px;flex:0 0 auto}
+
   /* Posts attachés à un rôle */
   .pup-post{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel2);border-radius:9px;padding:8px 12px;margin-top:8px}
   .pup-post .pp-corps{flex:1;min-width:150px}
@@ -706,6 +715,13 @@ function rendreAccueil(app){
   const actifs=HUB.projets.filter(p=>p.actif!==false);
   const corps = actifs.length ? corpsAccueil(actifs) : '<p class="legende">Aucun projet actif pour l\'instant.</p>';
   app.innerHTML = `
+    <div class="playlist-ruban">
+      <div class="pl-txt"><b>Playlist YouTube de la classe</b><span>Les 18 morceaux du répertoire, à écouter d'affilée.</span></div>
+      <a class="pl-btn" href="${PLAYLIST_URL}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.5a3 3 0 0 0-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 0 0 1 7.5 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.5a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.5zM9.8 15.3V8.7l5.7 3.3z"/></svg>
+        Écouter
+      </a>
+    </div>
     <section id="suggerer" style="margin-top:14px">
       <h2>Suggérer un morceau</h2>
       <p class="legende">Une idée de reprise ? Proposez-la : elle défile en haut de page. ${estAdmin()?"Vous pourrez ensuite la transformer en projet depuis Gestion.":"L'organisateur verra passer votre idée."}</p>
@@ -1204,6 +1220,7 @@ async function supprimerAudio(id){
 
 /* ---- grilles cajón (Atelier Cajón) ---- */
 const ATELIER_CAJON_URL="https://nmulongo-sys.github.io/magic-drums/cajon.html";
+const PLAYLIST_URL="https://www.youtube.com/playlist?list=PLOA1Oq_wM5Yo";
 function b64urlUtf8(s){ return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
 function lienAtelier(contenu){ return ATELIER_CAJON_URL+"#g="+b64urlUtf8(JSON.stringify(contenu))+"&tab=parcours"; }
 function validerGrille(txt){
