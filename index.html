@@ -182,6 +182,16 @@
   .tuile[data-univers="yeye-retro"] .spine{background:linear-gradient(#f5e0c4,#c23a24)}
   .tuile[data-univers="yeye-retro"] .art .embleme{color:rgba(245,224,196,.4)}
 
+  .tuile[data-univers="jazz-nocturne"] .art{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(224,178,106,.05) 13px 14px),linear-gradient(165deg,#0d1322,#1a2438,#12203a)}
+  .tuile[data-univers="jazz-nocturne"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#e0b26a,transparent)}
+  .tuile[data-univers="jazz-nocturne"] .spine{background:linear-gradient(#e0b26a,#3a4d78)}
+  .tuile[data-univers="jazz-nocturne"] .art .embleme{color:rgba(224,178,106,.35)}
+
+  .tuile[data-univers="duo-projecteur"] .art{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(232,193,90,.04) 13px 14px),linear-gradient(180deg,#0e0c0a,#1c1712 60%,#2a2118)}
+  .tuile[data-univers="duo-projecteur"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#e8c15a,transparent)}
+  .tuile[data-univers="duo-projecteur"] .spine{background:linear-gradient(#e8c15a,#8a4a3e)}
+  .tuile[data-univers="duo-projecteur"] .art .embleme{color:rgba(232,193,90,.35)}
+
   /* Barre de tri de l'accueil + en-têtes de groupe */
   .tri-accueil{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 16px;align-items:center}
   .tri-accueil .lib{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin-right:2px}
@@ -389,6 +399,10 @@
   .scope-projet[data-univers="soul-vinyle"] .projet-hero{background:linear-gradient(180deg,#1e120c,#3d251a 60%,#2a1812)}
   .scope-projet[data-univers="yeye-retro"]{--bg:#2a0d0a;--panel:#3a140f;--panel2:#451a13;--ink:#ffe9d6;--sub:#d3a89e;--line:#5a281f;--acc:#f2b705;--acc2:#e8622e;--accInk:#2a0d0a;--staff:rgba(242,183,5,.06)}
   .scope-projet[data-univers="yeye-retro"] .projet-hero{background:linear-gradient(180deg,#2a0d0a,#7a1414 55%,#c23a24)}
+  .scope-projet[data-univers="jazz-nocturne"]{--bg:#0d1322;--panel:#151d30;--panel2:#1b2439;--ink:#eef0f6;--sub:#9daac4;--line:#28324d;--acc:#e0b26a;--acc2:#7d93c4;--accInk:#0d1322;--staff:rgba(224,178,106,.05)}
+  .scope-projet[data-univers="jazz-nocturne"] .projet-hero{background:linear-gradient(180deg,#0d1322,#1a2438 60%,#12203a)}
+  .scope-projet[data-univers="duo-projecteur"]{--bg:#100d0a;--panel:#1a1510;--panel2:#211b14;--ink:#f5eddf;--sub:#bda98a;--line:#352b1e;--acc:#e8c15a;--acc2:#b0574a;--accInk:#100d0a;--staff:rgba(232,193,90,.05)}
+  .scope-projet[data-univers="duo-projecteur"] .projet-hero{background:linear-gradient(180deg,#0e0c0a,#1c1712 60%,#2a2118)}
 
   /* ---- Animations du motif de hero, par univers ---- */
   @media (prefers-reduced-motion: no-preference){
@@ -405,9 +419,11 @@
     .scope-projet[data-univers="jaune-soleil"] .motif-hero{animation:heroLeve 1s ease-out,respireMotif 4s ease-in-out 1s infinite}
     .scope-projet[data-univers="vitrail"] .motif-hero,
     .scope-projet[data-univers="retrowave-pastel"] .motif-hero,
+    .scope-projet[data-univers="duo-projecteur"] .motif-hero,
     .scope-projet[data-univers="baroque-revolution"] .motif-hero{animation:heroLeve 1s ease-out,respireMotif 6s ease-in-out 1s infinite}
     .scope-projet[data-univers="nuit-pastel"] .motif-hero,
     .scope-projet[data-univers="chanson-poetique"] .motif-hero,
+    .scope-projet[data-univers="jazz-nocturne"] .motif-hero,
     .scope-projet[data-univers="yeye-retro"] .motif-hero{animation:heroLeve 1s ease-out,scintilleMotif 3.5s ease-in-out 1s infinite}
     .scope-projet[data-univers="guinguette"] .motif-hero,
     .scope-projet[data-univers="rnb-pourpre"] .motif-hero,
@@ -624,6 +640,8 @@ function motifInner(u){switch(u){
  case "vitrail": return `<path d="M30 88 V44 Q30 20 50 12 Q70 20 70 44 V88 Z" fill="none" stroke="currentColor" stroke-width="3"/><line x1="50" y1="20" x2="50" y2="88" stroke="currentColor" stroke-width="2.5"/><path d="M40 52 Q40 40 50 40 Q60 40 60 52" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="50" cy="30" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/>`;
  case "soul-vinyle": return `<circle cx="50" cy="50" r="30" fill="currentColor"/><g fill="none" stroke="rgba(0,0,0,.32)" stroke-width="1.5"><circle cx="50" cy="50" r="24"/><circle cx="50" cy="50" r="19"/><circle cx="50" cy="50" r="14"/></g><circle cx="50" cy="50" r="9" fill="rgba(0,0,0,.38)"/><circle cx="50" cy="50" r="2.6" fill="currentColor"/>`;
  case "yeye-retro": return `<path fill="currentColor" d="M22 90 C28 74 31 70 35 66 L41 46 L48 20 L48 8 L52 8 L52 20 L59 46 L65 66 C69 70 72 74 78 90 L67 90 C63 79 57 75 50 75 C43 75 37 79 33 90 Z"/><rect x="35" y="64" width="30" height="3" fill="currentColor"/><rect x="41" y="44" width="18" height="3" fill="currentColor"/>`;
+ case "jazz-nocturne": return `<path fill="currentColor" d="M74 12 a15 15 0 1 0 10 26 a12 12 0 1 1 -10 -26z"/><path d="M8 80 q30 -7 58 -2" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="42" cy="67" rx="13" ry="8.5" fill="currentColor"/><path d="M30 67 l-13 -7 4 9 -4 5z" fill="currentColor"/><circle cx="55" cy="59" r="5.5" fill="currentColor"/><path d="M60 58 l8 2.5 -8 2z" fill="currentColor"/><path d="M70 50 l1.5 -5 M75 47 l1.5 -5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+ case "duo-projecteur": return `<path d="M50 2 L20 92 L80 92 Z" fill="currentColor" opacity=".22"/><circle cx="38" cy="44" r="6.5" fill="currentColor"/><rect x="36.4" y="51" width="3.2" height="31" rx="1.5" fill="currentColor"/><path d="M29 88 q9 -5 18 0z" fill="currentColor"/><circle cx="62" cy="44" r="6.5" fill="currentColor"/><rect x="60.4" y="51" width="3.2" height="31" rx="1.5" fill="currentColor"/><path d="M53 88 q9 -5 18 0z" fill="currentColor"/>`;
  default: return null;
 }}
 function motifSVG(u,cls){ const i=motifInner(u); return i?`<svg class="${cls}" viewBox="0 0 100 100" fill="none" aria-hidden="true">${i}</svg>`:""; }
@@ -804,7 +822,7 @@ function vueGestion(app){
         <div class="ligne"><input id="np-titre" type="text" placeholder="Titre" class="pousse"><input id="np-auteur" type="text" placeholder="Auteur / groupe" class="pousse"></div>
         <div class="ligne"><input id="np-tonalite" type="text" placeholder="Tonalité (ex. La mineur)" class="pousse"><input id="np-tempo" type="number" placeholder="Tempo (BPM)" style="width:130px"></div>
         <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers${aide("L\'ambiance visuelle propre à ce projet : Formation Musicale (crème, sobre) ou Outrun (néon nuit). Le reste de la plateforme n\'est pas affecté.")}&nbsp;
-          <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option><option value="nuit-pastel">Nuit pastel (indigo/rose)</option><option value="disco-solaire">Disco solaire (or/magenta)</option><option value="retrowave-pastel">Retrowave pastel (corail/turquoise)</option><option value="graphique-colorblock">Graphique color-block</option><option value="jaune-soleil">Jaune soleil</option><option value="guinguette">Guinguette (brun/grenat)</option><option value="rnb-pourpre">R&amp;B pourpre</option><option value="plage-tropicale">Plage tropicale</option><option value="baroque-revolution">Baroque révolution (rouge/or)</option><option value="altrock-patine">Alt-rock patine (vert/rouille)</option><option value="britpop">Britpop (gris/bleu)</option><option value="chanson-poetique">Chanson poétique (bleu-gris)</option><option value="vitrail">Vitrail (bleu nuit/or)</option><option value="soul-vinyle">Soul vinyle (sépia/ambre)</option><option value="yeye-retro">Yéyé rétro (rouge/crème)</option></select></label>
+          <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option><option value="nuit-pastel">Nuit pastel (indigo/rose)</option><option value="disco-solaire">Disco solaire (or/magenta)</option><option value="retrowave-pastel">Retrowave pastel (corail/turquoise)</option><option value="graphique-colorblock">Graphique color-block</option><option value="jaune-soleil">Jaune soleil</option><option value="guinguette">Guinguette (brun/grenat)</option><option value="rnb-pourpre">R&amp;B pourpre</option><option value="plage-tropicale">Plage tropicale</option><option value="baroque-revolution">Baroque révolution (rouge/or)</option><option value="altrock-patine">Alt-rock patine (vert/rouille)</option><option value="britpop">Britpop (gris/bleu)</option><option value="chanson-poetique">Chanson poétique (bleu-gris)</option><option value="vitrail">Vitrail (bleu nuit/or)</option><option value="soul-vinyle">Soul vinyle (sépia/ambre)</option><option value="yeye-retro">Yéyé rétro (rouge/crème)</option><option value="jazz-nocturne">Jazz nocturne (bleu nuit/ambre)</option><option value="duo-projecteur">Duo projecteur (scène noire/or)</option></select></label>
           <button onclick="creerProjet()">Créer</button></div>
         <p class="legende" style="margin:10px 0 0">Le projet démarre avec des rôles de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
       </div>
