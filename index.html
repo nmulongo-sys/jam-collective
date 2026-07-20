@@ -224,6 +224,11 @@
   .pup-post{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel2);border-radius:9px;padding:8px 12px;margin-top:8px}
   .pup-post .pp-corps{flex:1;min-width:150px}
   .pup-post .m{color:var(--sub);font-size:.8rem;margin-top:2px}
+  .pup-post .pp-corps audio{width:100%;margin-top:6px;display:block}
+  .pup-post .pp-vid{width:92px;border-radius:6px;cursor:pointer;flex:0 0 auto}
+  .pup-post .lecteur{flex-basis:100%}
+  .pup-post .doc a{color:var(--acc2);font-weight:600;text-decoration:none;word-break:break-word}
+  .pup-post .doc a:hover{text-decoration:underline}
 
   /* Formulaires */
   input,select,textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
@@ -909,12 +914,12 @@ async function vueProjet(app, slug){
       <div class="carte"><span class="ss-titre">Proposer une répétition</span>
         <div class="ligne"><input id="nr-quand" type="datetime-local"><input id="nr-lieu" type="text" placeholder="Lieu"></div>
         <div class="ligne"><input id="nr-note" type="text" placeholder="Note (facultatif)" class="pousse"><button onclick="ajouterRepet()">Proposer</button></div></div></section>
-    <section id="partitions"><h2>Partitions</h2><p class="legende">Choisissez le rôle, puis joignez le fichier. PDF ou image, 20 Mo max.</p><div id="liste-partitions"></div>
+    <section id="partitions"><h2>Partitions</h2><p class="legende">Déposez ici — la partition s'affiche ensuite sur la carte de son rôle. PDF ou image, 20 Mo max.</p><div id="liste-partitions"></div>
       <div class="carte"><span class="ss-titre">Déposer une partition</span>
         <div class="ligne"><select id="pt-pupitre" style="flex:1;min-width:180px"></select></div>
         <div class="ligne"><input id="pt-fichier" type="file" accept=".pdf,image/*,.musicxml,.xml,.mxl" style="flex:1;min-width:180px"><button id="pt-btn" onclick="deposerPartition()">Joindre</button></div></div></section>
     <section id="audios"><h2>Enregistrements${aide("Enregistre-toi directement au micro, dépose un audio déjà fait, ou colle un lien (Drive, WhatsApp…). Chaque audio peut être nommé et adressé à un rôle ou à tout le monde.")}</h2>
-      <p class="legende">Enregistre au micro, dépose un fichier audio, ou colle un lien — pour un rôle ou en Général.</p>
+      <p class="legende">Enregistre au micro, dépose un fichier ou colle un lien : destiné à un rôle, l'audio s'affiche sur la carte du rôle ; en Général, il reste listé ici.</p>
       <div class="carte">
         <div class="ligne"><select id="au-pupitre" style="flex:1;min-width:180px"></select>
           <input id="au-titre" type="text" placeholder="Nom de l'enregistrement" class="pousse"></div>
@@ -939,7 +944,7 @@ async function vueProjet(app, slug){
         <div class="ligne"><button onclick="ajouterGrille()">Ajouter la grille</button></div>
       </div>
       <div id="liste-grilles"></div></section>
-    <section id="videos"><h2>Vidéos</h2><p class="legende">Choisissez le rôle (ou Général), puis collez le lien YouTube.</p>
+    <section id="videos"><h2>Vidéos</h2><p class="legende">Collez le lien YouTube : destiné à un rôle, il s'affiche sur la carte du rôle ; en Général, il reste listé ici.</p>
       <div class="carte"><div class="ligne"><select id="nl-pupitre" style="flex:1;min-width:180px"></select>
         <select id="nl-cat"><option value="original">original</option><option value="reprise">reprise</option><option value="tuto">tuto</option><option value="autre" selected>autre</option></select></div>
         <div class="ligne"><input id="nl-url" type="url" placeholder="https://youtube.com/…" inputmode="url"><input id="nl-titre" type="text" placeholder="Titre"><button onclick="ajouterLien()">Partager</button></div></div>
@@ -991,7 +996,7 @@ function rendrePupitres(){
     }).join("");
     const corps=ins.length?`<div class="inscrits">${rangs}</div>`:`<p class="vide">Personne pour l'instant.</p>`;
     const action=mien?"":`<div class="pup-action"><button class="discret" onclick="inscrire('${p.id}')">Prendre ce rôle</button></div>`;
-    const posts=(PROJET.grilles||[]).filter(g=>g.pupitre_id===p.id).map(posteGrille).join("");
+    const posts=postsDuRole(p.id);
     return `<div class="carte"><div class="pup-tete"><span class="nom">${esc(p.instrument)}</span><span class="badge b-${esc(p.besoin)}">${esc(p.besoin)}</span></div>
       ${p.note?`<div class="pup-note">${esc(p.note)}</div>`:""}${posts}${corps}${action}</div>`;
   }).join("");
@@ -1071,17 +1076,17 @@ function tailleLisible(o){ if(o==null)return ""; if(o<1024)return o+" o"; if(o<1
 function rendrePartitions(){
   remplirSelectPupitre("pt-pupitre",false);
   const z=document.getElementById("liste-partitions"); if(!z) return;
-  if(!PROJET.partitions.length){ z.innerHTML='<p class="legende">Aucune partition déposée.</p>'; return; }
   const ic=`<svg class="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`;
-  const groupes=[...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin})),{id:null,nom:"Non classé",besoin:null}];
-  z.innerHTML=groupes.map(g=>{
-    const fics=PROJET.partitions.filter(p=>p.pupitre_id===g.id); if(!fics.length)return "";
-    const rows=fics.map(f=>{ const suppr=(MOI&&f.personne_id===MOI.id)?` <button class="discret" onclick="supprimerPartition('${f.id}')">retirer</button>`:"";
-      return `<div class="part-fichier">${ic}<div class="doc"><a href="${urlPublique(f.chemin)}" target="_blank" rel="noopener" download>${esc(f.nom_fichier)}</a>
-        <div class="m">déposé par ${esc(nom(f.personne_id))}${f.taille?" · "+tailleLisible(f.taille):""}${suppr}</div></div></div>`; }).join("");
-    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
-    return `<div class="carte part-groupe"><p class="grp-titre">${esc(g.nom)} ${badge}</p>${rows}</div>`;
-  }).join("")||'<p class="legende">Aucune partition déposée.</p>';
+  const nonClasse=(PROJET.partitions||[]).filter(p=>!p.pupitre_id);
+  const total=(PROJET.partitions||[]).length;
+  if(!nonClasse.length){
+    z.innerHTML=total?'<p class="legende">Les partitions s\'affichent sur la carte de leur rôle, plus haut.</p>':'<p class="legende">Aucune partition déposée.</p>';
+    return;
+  }
+  const rows=nonClasse.map(f=>{ const suppr=(MOI&&f.personne_id===MOI.id)?` <button class="discret" onclick="supprimerPartition('${f.id}')">retirer</button>`:"";
+    return `<div class="part-fichier">${ic}<div class="doc"><a href="${urlPublique(f.chemin)}" target="_blank" rel="noopener" download>${esc(f.nom_fichier)}</a>
+      <div class="m">déposé par ${esc(nom(f.personne_id))}${f.taille?" · "+tailleLisible(f.taille):""}${suppr}</div></div></div>`; }).join("");
+  z.innerHTML=`<div class="carte part-groupe"><p class="grp-titre">Non classé</p>${rows}</div>`;
 }
 async function deposerPartition(){
   if(!exigerId())return;
@@ -1181,21 +1186,13 @@ function rendreAudios(){
   remplirSelectPupitre("au-pupitre",true);
   if(!micDispo()){ const b=document.getElementById("au-rec-btn"); if(b){ b.disabled=true; b.textContent="Micro indisponible ici"; } }
   const z=document.getElementById("liste-audios"); if(!z) return;
-  const audios=PROJET.audios||[];
-  if(!audios.length){ z.innerHTML='<p class="legende">Aucun enregistrement pour l\'instant.</p>'; return; }
-  const item=a=>{
-    const suppr=(MOI&&a.personne_id===MOI.id)?` <button class="discret" onclick="supprimerAudio('${a.id}')">retirer</button>`:"";
-    const corps=a.type==="lien"
-      ? `<div class="doc"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.titre||a.url)}</a></div>`
-      : `<div class="doc"><span style="font-weight:600">${esc(a.titre||a.chemin.split("/").pop())}</span><audio controls preload="none" src="${urlPublique(a.chemin)}"></audio></div>`;
-    return `<div class="audio-item">${corps}<div class="m">${a.type==="lien"?"lien":"audio"} · partagé par ${esc(nom(a.personne_id))}${a.taille?" · "+tailleLisible(a.taille):""}${suppr}</div></div>`;
-  };
-  const groupes=[{id:null,nom:"Général",besoin:null},...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin}))];
-  z.innerHTML=groupes.map(g=>{
-    const items=audios.filter(a=>a.pupitre_id===g.id); if(!items.length) return "";
-    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
-    return `<p class="grp-titre">${esc(g.nom)} ${badge}</p>${items.map(item).join("")}`;
-  }).join("")||'<p class="legende">Aucun enregistrement pour l\'instant.</p>';
+  const generaux=(PROJET.audios||[]).filter(a=>!a.pupitre_id);
+  const total=(PROJET.audios||[]).length;
+  if(!generaux.length){
+    z.innerHTML=total?'<p class="legende">Les audios de ce projet s\'affichent sur la carte de leur rôle, plus haut.</p>':'<p class="legende">Aucun enregistrement pour l\'instant.</p>';
+    return;
+  }
+  z.innerHTML=`<p class="grp-titre">Général</p>`+generaux.map(posteAudio).join("");
 }
 async function supprimerAudio(id){
   const a=(PROJET.audios||[]).find(x=>x.id===id);
@@ -1240,6 +1237,33 @@ function posteGrille(g){
     <div class="m">Grille cajón · ${esc(resumeGrille(c))} · par ${esc(nom(g.personne_id))}${suppr}</div></div>
     <a href="${esc(lienAtelier(c))}" target="_blank" rel="noopener" style="text-decoration:none"><button>▶ S'entraîner</button></a></div>`;
 }
+function postePartition(f){
+  const suppr=(MOI&&f.personne_id===MOI.id)?` <button class="discret" onclick="supprimerPartition('${f.id}')">retirer</button>`:"";
+  return `<div class="pup-post"><div class="pp-corps doc"><a href="${urlPublique(f.chemin)}" target="_blank" rel="noopener" download>${esc(f.nom_fichier)}</a>
+    <div class="m">Partition · déposée par ${esc(nom(f.personne_id))}${f.taille?" · "+tailleLisible(f.taille):""}${suppr}</div></div></div>`;
+}
+function posteAudio(a){
+  const suppr=(MOI&&a.personne_id===MOI.id)?` <button class="discret" onclick="supprimerAudio('${a.id}')">retirer</button>`:"";
+  const corps=a.type==="lien"
+    ? `<div class="pp-corps doc"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.titre||a.url)}</a><div class="m">Audio (lien) · par ${esc(nom(a.personne_id))}${suppr}</div></div>`
+    : `<div class="pp-corps doc"><span style="font-weight:600">${esc(a.titre||a.chemin.split("/").pop())}</span><audio controls preload="none" src="${urlPublique(a.chemin)}"></audio><div class="m">Audio · par ${esc(nom(a.personne_id))}${a.taille?" · "+tailleLisible(a.taille):""}${suppr}</div></div>`;
+  return `<div class="pup-post">${corps}</div>`;
+}
+function posteLien(l){
+  const yid=idYoutube(l.url);
+  const vign=yid?`<img class="pp-vid" src="https://img.youtube.com/vi/${yid}/hqdefault.jpg" alt="Vignette YouTube" loading="lazy" onclick="ouvrirVideo('${l.id}')">`:"";
+  const lect=(OUVERT===l.id&&yid)?`<div class="lecteur"><iframe src="https://www.youtube-nocookie.com/embed/${yid}" title="${esc(l.titre||"Vidéo")}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`:"";
+  const suppr=(MOI&&l.personne_id===MOI.id)?` <button class="discret" onclick="supprimerLien('${l.id}')">retirer</button>`:"";
+  return `<div class="pup-post">${vign}<div class="pp-corps doc"><span style="font-weight:600"><span class="cat">${esc(l.categorie)}</span> ${esc(l.titre||"Sans titre")}</span>
+    <div class="m">Vidéo · <a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.url)}</a> · par ${esc(nom(l.personne_id))}${suppr}</div></div>${lect}</div>`;
+}
+function postsDuRole(pupId){
+  const g=(PROJET.grilles||[]).filter(x=>x.pupitre_id===pupId).map(posteGrille);
+  const pa=(PROJET.partitions||[]).filter(x=>x.pupitre_id===pupId).map(postePartition);
+  const au=(PROJET.audios||[]).filter(x=>x.pupitre_id===pupId).map(posteAudio);
+  const li=(PROJET.liens||[]).filter(x=>x.pupitre_id===pupId).map(posteLien);
+  return [...g,...pa,...au,...li].join("");
+}
 function rendreGrilles(){
   remplirSelectPupitre("gr-pupitre",true);
   const z=document.getElementById("liste-grilles"); if(!z) return;
@@ -1258,19 +1282,15 @@ function idYoutube(url){ const m=String(url).match(/(?:youtu\.be\/|youtube\.com\
 function rendreLiens(){
   remplirSelectPupitre("nl-pupitre",true);
   const z=document.getElementById("liste-liens"); if(!z) return;
-  if(!PROJET.liens.length){ z.innerHTML='<p class="legende">Aucune vidéo partagée.</p>'; return; }
-  const carte=l=>{ const yid=idYoutube(l.url);
-    const vign=yid?`<img src="https://img.youtube.com/vi/${yid}/hqdefault.jpg" alt="Vignette YouTube" loading="lazy" onclick="ouvrirVideo('${l.id}')">`:"";
-    const lect=(OUVERT===l.id&&yid)?`<div class="lecteur"><iframe src="https://www.youtube-nocookie.com/embed/${yid}" title="${esc(l.titre||"Vidéo")}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`:"";
-    const suppr=(MOI&&l.personne_id===MOI.id)?` <button class="discret" onclick="supprimerLien('${l.id}')">retirer</button>`:"";
-    return `<div class="carte video">${vign}<div class="corps"><div class="titre"><span class="cat">${esc(l.categorie)}</span>${esc(l.titre||"Sans titre")}</div>
-      <div class="meta">partagé par ${esc(nom(l.personne_id))}${suppr}</div><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.url)}</a></div>${lect}</div>`; };
-  const groupes=[{id:null,nom:"Général",besoin:null},...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin}))];
-  z.innerHTML=groupes.map(g=>{ const items=PROJET.liens.filter(l=>l.pupitre_id===g.id); if(!items.length)return "";
-    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
-    return `<p class="grp-titre">${esc(g.nom)} ${badge}</p>${items.map(carte).join("")}`; }).join("")||'<p class="legende">Aucune vidéo partagée.</p>';
+  const generaux=(PROJET.liens||[]).filter(l=>!l.pupitre_id);
+  const total=(PROJET.liens||[]).length;
+  if(!generaux.length){
+    z.innerHTML=total?'<p class="legende">Les vidéos de ce projet s\'affichent sur la carte de leur rôle, plus haut.</p>':'<p class="legende">Aucune vidéo partagée.</p>';
+    return;
+  }
+  z.innerHTML=`<p class="grp-titre">Général</p>`+generaux.map(posteLien).join("");
 }
-function ouvrirVideo(id){ OUVERT=(OUVERT===id)?null:id; rendreLiens(); }
+function ouvrirVideo(id){ OUVERT=(OUVERT===id)?null:id; rendreLiens(); rendrePupitres(); }
 async function ajouterLien(){ if(!exigerId())return; const url=document.getElementById("nl-url").value.trim(); if(!url)return alerte("Collez un lien."); if(!/^https?:\/\//i.test(url))return alerte("Lien invalide.");
   const titre=document.getElementById("nl-titre").value.trim(); const categorie=document.getElementById("nl-cat").value; const pupId=document.getElementById("nl-pupitre").value||null;
   try{ await inserer("proj_liens",{projet_id:pid(),url,titre,categorie,personne_id:MOI.id,pupitre_id:pupId}); document.getElementById("nl-url").value="";document.getElementById("nl-titre").value=""; rafraichir(); }catch(e){ alerte(e.message); } }
