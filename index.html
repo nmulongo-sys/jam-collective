@@ -667,13 +667,7 @@ function rendreAccueil(app){
   const actifs=HUB.projets.filter(p=>p.actif!==false);
   const corps = actifs.length ? corpsAccueil(actifs) : '<p class="legende">Aucun projet actif pour l\'instant.</p>';
   app.innerHTML = `
-    <section id="projets">
-      <h2>Projets</h2>
-      <p class="legende">Choisissez un projet pour rejoindre les rôles, répétitions et partitions.</p>
-      ${actifs.length?barreTri():""}
-      ${corps}
-    </section>
-    <section id="suggerer">
+    <section id="suggerer" style="margin-top:14px">
       <h2>Suggérer un morceau</h2>
       <p class="legende">Une idée de reprise ? Proposez-la : elle défile en haut de page. ${estAdmin()?"Vous pourrez ensuite la transformer en projet depuis Gestion.":"L'organisateur verra passer votre idée."}</p>
       <div class="carte">
@@ -683,6 +677,12 @@ function rendreAccueil(app){
           <button onclick="proposerSuggestion()">Proposer</button>
         </div>
       </div>
+    </section>
+    <section id="projets">
+      <h2>Projets</h2>
+      <p class="legende">Choisissez un projet pour rejoindre les rôles, répétitions et partitions.</p>
+      ${actifs.length?barreTri():""}
+      ${corps}
     </section>`;
 }
 async function vueAccueil(app){
