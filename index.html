@@ -220,6 +220,11 @@
   .audio-item .m{color:var(--sub);font-size:.8rem;margin-top:2px}
   .rec-apercu{margin-top:10px}
 
+  /* Posts attachés à un rôle */
+  .pup-post{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel2);border-radius:9px;padding:8px 12px;margin-top:8px}
+  .pup-post .pp-corps{flex:1;min-width:150px}
+  .pup-post .m{color:var(--sub);font-size:.8rem;margin-top:2px}
+
   /* Formulaires */
   input,select,textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
     border-radius:10px;padding:9px 12px;font:inherit;font-size:.95rem;max-width:100%}
@@ -845,14 +850,14 @@ async function creerProjet(depuis){
   const univers=depuis?"fm":((document.getElementById("np-univers")||{}).value||"fm");
   const slug=slugUnique(slugifier(titre));
   try{
-    const [p]=await inserer("hub_projets",{slug,titre,auteur:auteur||null,tonalite:tonalite||null,tempo,univers});
+    const [p]=await inserer("hub_projets",{slug,titre,auteur:auteur||null,tonalite:tonalite||null,tempo,univers,propose_par:(depuis&&depuis.propose_par)||null});
     await semerPupitres(p.id);
     if(depuis&&depuis.id) await effacer("hub_suggestions","id=eq."+depuis.id);
     location.hash="#/p/"+enc(slug);
     alerte("Projet créé.");
   }catch(e){ alerte("Création impossible : "+e.message); }
 }
-function creerDepuisSuggestion(id){ const s=HUB.suggestions.find(x=>x.id===id); if(s) creerProjet({id:s.id,titre:s.titre,auteur:s.auteur||""}); }
+function creerDepuisSuggestion(id){ const s=HUB.suggestions.find(x=>x.id===id); if(s) creerProjet({id:s.id,titre:s.titre,auteur:s.auteur||"",propose_par:s.propose_par||null}); }
 async function supprimerSuggestion(id){ try{ await effacer("hub_suggestions","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
 async function basculerActif(id,versActif){ try{ await modifier("hub_projets","id=eq."+id,{actif:versActif}); rafraichir(); }catch(e){ alerte(e.message); } }
 async function supprimerProjet(id,titre){ if(!confirm('Supprimer « '+titre+' » et toutes ses données ? Irréversible.')) return; try{ await effacer("hub_projets","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
@@ -876,7 +881,7 @@ async function vueProjet(app, slug){
   ]);
   PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms,audios:au,grilles:gr};
   const estMembre=!!(MOI&&me.some(m=>m.personne_id===MOI.id));
-  const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]];
+  const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]]; if(meta.propose_par) infos.push(["Proposé par",nom(meta.propose_par)]);
   const univers=meta.univers||"fm";
   app.innerHTML=`
     <a class="retour" href="#/">← Tous les projets</a>
@@ -926,7 +931,7 @@ async function vueProjet(app, slug){
       </div>
       <div id="liste-audios"></div></section>
     <section id="grilles"><h2>Grilles cajón${aide("Collez ici le JSON complet exporté depuis l'Atelier Cajón (onglet Import / Export → Copier). Le percussionniste ouvre ensuite la grille directement dans l'Atelier, avec le parcours d'étude et le tempo réglable.")}</h2>
-      <p class="legende">Une grille toute faite de l'Atelier Cajón, prête à travailler : le bouton l'ouvre dans l'Atelier avec le parcours d'étude et la vitesse réglable.</p>
+      <p class="legende">Déposez ici une grille de l'Atelier Cajón : destinée à un rôle, elle s'affiche comme premier post sur la carte de ce rôle ; en Général, elle reste listée ci-dessous.</p>
       <div class="carte">
         <div class="ligne"><select id="gr-pupitre" style="flex:1;min-width:180px"></select>
           <input id="gr-titre" type="text" placeholder="Nom de la grille" class="pousse"></div>
@@ -986,8 +991,9 @@ function rendrePupitres(){
     }).join("");
     const corps=ins.length?`<div class="inscrits">${rangs}</div>`:`<p class="vide">Personne pour l'instant.</p>`;
     const action=mien?"":`<div class="pup-action"><button class="discret" onclick="inscrire('${p.id}')">Prendre ce rôle</button></div>`;
+    const posts=(PROJET.grilles||[]).filter(g=>g.pupitre_id===p.id).map(posteGrille).join("");
     return `<div class="carte"><div class="pup-tete"><span class="nom">${esc(p.instrument)}</span><span class="badge b-${esc(p.besoin)}">${esc(p.besoin)}</span></div>
-      ${p.note?`<div class="pup-note">${esc(p.note)}</div>`:""}${corps}${action}</div>`;
+      ${p.note?`<div class="pup-note">${esc(p.note)}</div>`:""}${posts}${corps}${action}</div>`;
   }).join("");
 }
 async function inscrire(pupId){ if(!exigerId())return; try{ await upsert("proj_membres",{projet_id:pid(),personne_id:MOI.id},"projet_id,personne_id"); await inserer("proj_inscriptions",{projet_id:pid(),pupitre_id:pupId,personne_id:MOI.id,statut:"apprentissage"}); rafraichir(); }catch(e){ alerte("Inscription impossible : "+e.message); } }
@@ -1223,25 +1229,27 @@ async function ajouterGrille(){
     zone.value=""; if(t)t.value=""; rafraichir(); alerte("Grille ajoutée.");
   }catch(e){ alerte("Impossible : "+e.message); }
 }
+function resumeGrille(c){
+  const nbM=Array.isArray(c.measures)?c.measures.length:0;
+  return [nbM+" mesure"+(nbM>1?"s":""), c.bpm?c.bpm+" BPM":null, (c.swing&&c.swing!==50)?"swing "+c.swing+"%":null].filter(Boolean).join(" · ");
+}
+function posteGrille(g){
+  const c=g.contenu||{};
+  const suppr=(MOI&&g.personne_id===MOI.id)?` <button class="discret" onclick="supprimerGrille('${g.id}')">retirer</button>`:"";
+  return `<div class="pup-post"><div class="pp-corps"><span style="font-weight:600">${esc(g.titre||"Grille")}</span>
+    <div class="m">Grille cajón · ${esc(resumeGrille(c))} · par ${esc(nom(g.personne_id))}${suppr}</div></div>
+    <a href="${esc(lienAtelier(c))}" target="_blank" rel="noopener" style="text-decoration:none"><button>▶ S'entraîner</button></a></div>`;
+}
 function rendreGrilles(){
   remplirSelectPupitre("gr-pupitre",true);
   const z=document.getElementById("liste-grilles"); if(!z) return;
-  const grilles=PROJET.grilles||[];
-  if(!grilles.length){ z.innerHTML='<p class="legende">Aucune grille pour l\'instant.</p>'; return; }
-  const item=g=>{
-    const c=g.contenu||{}; const nbM=Array.isArray(c.measures)?c.measures.length:0;
-    const resume=[nbM+" mesure"+(nbM>1?"s":""), c.bpm?c.bpm+" BPM":null, (c.swing&&c.swing!==50)?"swing "+c.swing+"%":null].filter(Boolean).join(" · ");
-    const suppr=(MOI&&g.personne_id===MOI.id)?` <button class="discret" onclick="supprimerGrille('${g.id}')">retirer</button>`:"";
-    return `<div class="audio-item"><div class="doc"><span style="font-weight:600">${esc(g.titre||"Grille")}</span>
-      <div class="m">${esc(resume)} · partagée par ${esc(nom(g.personne_id))}${suppr}</div></div>
-      <div class="ligne" style="margin-top:8px"><a href="${esc(lienAtelier(c))}" target="_blank" rel="noopener" style="text-decoration:none"><button>▶ S'entraîner (parcours)</button></a></div></div>`;
-  };
-  const groupes=[{id:null,nom:"Général",besoin:null},...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin}))];
-  z.innerHTML=groupes.map(g=>{
-    const items=grilles.filter(x=>x.pupitre_id===g.id); if(!items.length) return "";
-    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
-    return `<p class="grp-titre">${esc(g.nom)} ${badge}</p>${items.map(item).join("")}`;
-  }).join("")||'<p class="legende">Aucune grille pour l\'instant.</p>';
+  const generales=(PROJET.grilles||[]).filter(g=>!g.pupitre_id);
+  const total=(PROJET.grilles||[]).length;
+  if(!generales.length){
+    z.innerHTML=total?'<p class="legende">Les grilles de ce projet sont affichées sur la carte de leur rôle, plus haut.</p>':'<p class="legende">Aucune grille pour l\'instant.</p>';
+    return;
+  }
+  z.innerHTML=`<p class="grp-titre">Général</p>`+generales.map(posteGrille).join("");
 }
 async function supprimerGrille(id){ try{ await effacer("proj_grilles","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
 
