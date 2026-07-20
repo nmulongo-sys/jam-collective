@@ -379,6 +379,32 @@
   .scope-projet[data-univers="yeye-retro"]{--bg:#2a0d0a;--panel:#3a140f;--panel2:#451a13;--ink:#ffe9d6;--sub:#d3a89e;--line:#5a281f;--acc:#f2b705;--acc2:#e8622e;--accInk:#2a0d0a;--staff:rgba(242,183,5,.06)}
   .scope-projet[data-univers="yeye-retro"] .projet-hero{background:linear-gradient(180deg,#2a0d0a,#7a1414 55%,#c23a24)}
 
+  /* ---- Animations du motif de hero, par univers ---- */
+  @media (prefers-reduced-motion: no-preference){
+    @keyframes heroLeve{from{transform:translateY(46px);opacity:0}to{transform:translateY(0);opacity:.15}}
+    @keyframes tourneMotif{to{transform:rotate(360deg)}}
+    @keyframes balanceMotif{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+    @keyframes scintilleMotif{0%,100%{opacity:.07}50%{opacity:.26}}
+    @keyframes respireMotif{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+    @keyframes flotteMotif{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .scope-projet .motif-hero{animation:heroLeve 1s ease-out}
+    .scope-projet[data-univers="soul-vinyle"] .motif-hero{animation:heroLeve 1s ease-out,tourneMotif 12s linear 1s infinite}
+    .scope-projet[data-univers="disco-solaire"] .motif-hero{transform-origin:50% 6%;animation:heroLeve 1s ease-out,balanceMotif 5s ease-in-out 1s infinite}
+    .scope-projet[data-univers="plage-tropicale"] .motif-hero{transform-origin:60% 88%;animation:heroLeve 1s ease-out,balanceMotif 7s ease-in-out 1s infinite}
+    .scope-projet[data-univers="jaune-soleil"] .motif-hero{animation:heroLeve 1s ease-out,respireMotif 4s ease-in-out 1s infinite}
+    .scope-projet[data-univers="vitrail"] .motif-hero,
+    .scope-projet[data-univers="retrowave-pastel"] .motif-hero,
+    .scope-projet[data-univers="baroque-revolution"] .motif-hero{animation:heroLeve 1s ease-out,respireMotif 6s ease-in-out 1s infinite}
+    .scope-projet[data-univers="nuit-pastel"] .motif-hero,
+    .scope-projet[data-univers="chanson-poetique"] .motif-hero,
+    .scope-projet[data-univers="yeye-retro"] .motif-hero{animation:heroLeve 1s ease-out,scintilleMotif 3.5s ease-in-out 1s infinite}
+    .scope-projet[data-univers="guinguette"] .motif-hero,
+    .scope-projet[data-univers="rnb-pourpre"] .motif-hero,
+    .scope-projet[data-univers="graphique-colorblock"] .motif-hero,
+    .scope-projet[data-univers="britpop"] .motif-hero,
+    .scope-projet[data-univers="altrock-patine"] .motif-hero{animation:heroLeve 1s ease-out,flotteMotif 5s ease-in-out 1s infinite}
+  }
+
   /* ===== Infobulles ===== */
   .aide{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
     border:1px solid var(--line);color:var(--sub);font-size:.66rem;font-weight:700;cursor:help;position:relative;
@@ -566,7 +592,9 @@ function compteMembres(){ // renseigné à la volée par vueAccueil
   return AccueilMembres;
 }
 let AccueilMembres={};
+let MesProjets=new Set();
 let TRI_ACCUEIL="recent";
+function triFlat(l){ return TRI_ACCUEIL==="alpha" ? [...l].sort(parTitre) : [...l].sort((a,b)=> new Date(b.created_at||0)-new Date(a.created_at||0)); }
 function decennieDe(p){ return (p.annee!=null && !isNaN(p.annee)) ? (Math.floor(p.annee/10)*10) : null; }
 function motifInner(u){switch(u){
  case "outrun": return `<path fill="currentColor" d="M12 58 q4-14 20-15 q10-10 26-9 q16 0 24 12 q10 1 12 12 l-2 6 h-8 a8 8 0 0 0 -16 0 h-32 a8 8 0 0 0 -16 0 h-6 z"/><circle cx="34" cy="66" r="7" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="74" cy="66" r="7" fill="none" stroke="currentColor" stroke-width="4"/>`;
@@ -602,25 +630,33 @@ function grilleTuiles(list){ return `<div class="grille">`+list.map(tuileAccueil
 function grilleGroupes(groupes){ return groupes.filter(g=>g.items.length).map(g=>`<p class="grp-accueil">${esc(g.titre)} <span class="cpt">${g.items.length}</span></p>`+grilleTuiles(g.items)).join(""); }
 function parTitre(a,b){ return (a.titre||"").localeCompare(b.titre||"","fr",{sensitivity:"base"}); }
 function grouper(actifs, clef, defaut){ const map=new Map(); actifs.forEach(p=>{ const k=clef(p)??defaut; if(!map.has(k))map.set(k,[]); map.get(k).push(p); }); return map; }
-function corpsAccueil(actifs){
-  if(TRI_ACCUEIL==="alpha") return grilleTuiles([...actifs].sort(parTitre));
+function corpsSelonMode(list){
   if(TRI_ACCUEIL==="decennie"){
-    const map=grouper(actifs, p=>{ const d=decennieDe(p); return d==null?null:(d+"s"); }, "Sans date");
+    const map=grouper(list, p=>{ const d=decennieDe(p); return d==null?null:(d+"s"); }, "Sans date");
     const clefs=[...map.keys()].sort((a,b)=>{ if(a==="Sans date")return 1; if(b==="Sans date")return -1; return parseInt(b)-parseInt(a); });
     return grilleGroupes(clefs.map(k=>({titre:k,items:map.get(k).sort((a,b)=>(b.annee||0)-(a.annee||0)||parTitre(a,b))})));
   }
   if(TRI_ACCUEIL==="langue"){
     const ordre=["Français","Anglais"];
-    const map=grouper(actifs, p=>p.langue||null, "Autre");
+    const map=grouper(list, p=>p.langue||null, "Autre");
     const clefs=[...map.keys()].sort((a,b)=>{ const ia=ordre.indexOf(a),ib=ordre.indexOf(b); if(ia<0&&ib<0)return a.localeCompare(b,"fr"); if(ia<0)return 1; if(ib<0)return -1; return ia-ib; });
     return grilleGroupes(clefs.map(k=>({titre:k,items:map.get(k).sort(parTitre)})));
   }
   if(TRI_ACCUEIL==="style"){
-    const map=grouper(actifs, p=>p.style||null, "Autre");
+    const map=grouper(list, p=>p.style||null, "Autre");
     const clefs=[...map.keys()].sort((a,b)=>{ if(a==="Autre")return 1; if(b==="Autre")return -1; return a.localeCompare(b,"fr"); });
     return grilleGroupes(clefs.map(k=>({titre:k,items:map.get(k).sort(parTitre)})));
   }
-  return grilleTuiles([...actifs].sort((a,b)=> new Date(b.created_at||0)-new Date(a.created_at||0)));
+  return grilleTuiles(triFlat(list));
+}
+function corpsAccueil(actifs){
+  const miens=MOI?actifs.filter(p=>MesProjets.has(p.id)):[];
+  const autres=miens.length?actifs.filter(p=>!MesProjets.has(p.id)):actifs;
+  let out="";
+  if(miens.length) out+=`<p class="grp-accueil">Mes projets <span class="cpt">${miens.length}</span></p>`+grilleTuiles(triFlat(miens));
+  let corps=autres.length?corpsSelonMode(autres):"";
+  if(miens.length&&autres.length&&(TRI_ACCUEIL==="recent"||TRI_ACCUEIL==="alpha")) corps=`<p class="grp-accueil">Les autres projets <span class="cpt">${autres.length}</span></p>`+corps;
+  return out+corps;
 }
 function barreTri(){
   const opt=[["recent","Récent"],["alpha","A → Z"],["decennie","Décennie"],["langue","Langue"],["style","Style"]];
@@ -633,7 +669,7 @@ function rendreAccueil(app){
   app.innerHTML = `
     <section id="projets">
       <h2>Projets</h2>
-      <p class="legende">Choisissez un projet pour rejoindre les pupitres, répétitions et partitions.</p>
+      <p class="legende">Choisissez un projet pour rejoindre les rôles, répétitions et partitions.</p>
       ${actifs.length?barreTri():""}
       ${corps}
     </section>
@@ -650,8 +686,8 @@ function rendreAccueil(app){
     </section>`;
 }
 async function vueAccueil(app){
-  // compter les membres par projet (léger), puis rendu selon le tri courant
-  try{ const m=await lire("proj_membres","&select=projet_id"); AccueilMembres={}; m.forEach(x=>AccueilMembres[x.projet_id]=(AccueilMembres[x.projet_id]||0)+1); }catch(e){ AccueilMembres={}; }
+  // membres par projet + mes adhésions, puis rendu selon le tri courant
+  try{ const m=await lire("proj_membres","&select=projet_id,personne_id"); AccueilMembres={}; MesProjets=new Set(); m.forEach(x=>{ AccueilMembres[x.projet_id]=(AccueilMembres[x.projet_id]||0)+1; if(MOI&&x.personne_id===MOI.id) MesProjets.add(x.projet_id); }); }catch(e){ AccueilMembres={}; MesProjets=new Set(); }
   rendreAccueil(app);
 }
 async function proposerSuggestion(){
@@ -759,7 +795,7 @@ function vueGestion(app){
         <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers${aide("L\'ambiance visuelle propre à ce projet : Formation Musicale (crème, sobre) ou Outrun (néon nuit). Le reste de la plateforme n\'est pas affecté.")}&nbsp;
           <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option><option value="nuit-pastel">Nuit pastel (indigo/rose)</option><option value="disco-solaire">Disco solaire (or/magenta)</option><option value="retrowave-pastel">Retrowave pastel (corail/turquoise)</option><option value="graphique-colorblock">Graphique color-block</option><option value="jaune-soleil">Jaune soleil</option><option value="guinguette">Guinguette (brun/grenat)</option><option value="rnb-pourpre">R&amp;B pourpre</option><option value="plage-tropicale">Plage tropicale</option><option value="baroque-revolution">Baroque révolution (rouge/or)</option><option value="altrock-patine">Alt-rock patine (vert/rouille)</option><option value="britpop">Britpop (gris/bleu)</option><option value="chanson-poetique">Chanson poétique (bleu-gris)</option><option value="vitrail">Vitrail (bleu nuit/or)</option><option value="soul-vinyle">Soul vinyle (sépia/ambre)</option><option value="yeye-retro">Yéyé rétro (rouge/crème)</option></select></label>
           <button onclick="creerProjet()">Créer</button></div>
-        <p class="legende" style="margin:10px 0 0">Le projet démarre avec des pupitres de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
+        <p class="legende" style="margin:10px 0 0">Le projet démarre avec des rôles de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
       </div>
     </section>
     <section><h2>Suggestions reçues</h2>${sugg}</section>
@@ -797,8 +833,6 @@ async function vueProjet(app, slug){
   const meta=HUB.projets.find(p=>p.slug===slug);
   if(!meta){ app.innerHTML='<a class="retour" href="#/">← Accueil</a><p class="legende">Projet introuvable.</p>'; return; }
   const pid=meta.id;
-  // rejoindre le projet si identifié
-  if(MOI){ try{ await upsert("proj_membres",{projet_id:pid,personne_id:MOI.id},"projet_id,personne_id"); }catch(e){} }
   const [pu,me,ins,re,pr,pa,li,ms]=await Promise.all([
     lire("proj_pupitres","&projet_id=eq."+pid+"&order=created_at.asc"),
     lire("proj_membres","&projet_id=eq."+pid),
@@ -810,6 +844,7 @@ async function vueProjet(app, slug){
     lire("proj_messages","&projet_id=eq."+pid+"&order=created_at.asc")
   ]);
   PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms};
+  const estMembre=!!(MOI&&me.some(m=>m.personne_id===MOI.id));
   const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]];
   const univers=meta.univers||"fm";
   app.innerHTML=`
@@ -821,28 +856,28 @@ async function vueProjet(app, slug){
         <div class="hero-in">
           <h2 class="pt-titre">${esc(meta.titre)}</h2>
           <p class="pt-sous">${esc(meta.auteur||"")}</p>
-          <button class="inviter" onclick="inviterProjet('${esc(slug)}')">Inviter</button>
+          ${MOI?(estMembre?`<button class="discret" onclick="quitterProjet()">Quitter ce projet</button> `:`<button onclick="rejoindreProjet()">Rejoindre ce projet</button> `):""}<button class="inviter" onclick="inviterProjet('${esc(slug)}')">Inviter</button>
         </div>
       </div>
       <section>
         <div class="carte infos">${infos.map(([k,v])=>`<div><span class="cle">${k}</span><div class="val">${esc(v)}</div></div>`).join("")}</div>
       </section>
-    <section id="pupitres"><h2>Pupitres${aide("Un pupitre = un instrument ou un rôle. Inscrivez-vous à un ou plusieurs ; plusieurs personnes peuvent tenir le même pupitre. Le niveau (indispensable / souhaitable / bonus) indique son importance pour le morceau.")}</h2><p class="legende">Plusieurs personnes par pupitre possible, et vous pouvez en tenir plusieurs.</p><div id="liste-pupitres"></div>
-      <div class="carte"><span class="ss-titre">Ajouter un pupitre</span><div class="ligne">
-        <input id="np2-nom" type="text" placeholder="Instrument ou rôle">
+    <section id="pupitres"><h2>Rôles (tu peux en choisir plusieurs)${aide("Un rôle = un instrument ou une fonction (chant, guitare, technique…). Plusieurs personnes peuvent tenir le même rôle. Le niveau (indispensable / souhaitable / bonus) indique son importance pour le morceau.")}</h2><p class="legende">Plusieurs personnes peuvent tenir le même rôle.</p><div id="liste-pupitres"></div>
+      <div class="carte"><span class="ss-titre">Ajouter un rôle</span><div class="ligne">
+        <input id="np2-nom" type="text" placeholder="Nom du rôle (instrument, chant…)">
         <select id="np2-besoin"><option value="indispensable">indispensable</option><option value="souhaitable" selected>souhaitable</option><option value="bonus">bonus</option></select>
         <button onclick="ajouterPupitre()">Ajouter</button></div></div></section>
-    <section id="participants"><h2>Participants</h2><p class="legende">Ceux qui ont rejoint ce projet. Le badge indique le pupitre principal.</p>
+    <section id="participants"><h2>Participants</h2><p class="legende">Ceux qui ont rejoint ce projet. Le badge indique le rôle principal.</p>
       <div id="zone-principal" class="principal"></div><div id="liste-participants"></div></section>
     <section id="repets"><h2>Répétitions</h2><p class="legende">Proposez une date, chacun répond.</p><div id="liste-repets"></div>
       <div class="carte"><span class="ss-titre">Proposer une répétition</span>
         <div class="ligne"><input id="nr-quand" type="datetime-local"><input id="nr-lieu" type="text" placeholder="Lieu"></div>
         <div class="ligne"><input id="nr-note" type="text" placeholder="Note (facultatif)" class="pousse"><button onclick="ajouterRepet()">Proposer</button></div></div></section>
-    <section id="partitions"><h2>Partitions</h2><p class="legende">Choisissez le pupitre, puis joignez le fichier. PDF ou image, 20 Mo max.</p><div id="liste-partitions"></div>
+    <section id="partitions"><h2>Partitions</h2><p class="legende">Choisissez le rôle, puis joignez le fichier. PDF ou image, 20 Mo max.</p><div id="liste-partitions"></div>
       <div class="carte"><span class="ss-titre">Déposer une partition</span>
         <div class="ligne"><select id="pt-pupitre" style="flex:1;min-width:180px"></select></div>
         <div class="ligne"><input id="pt-fichier" type="file" accept=".pdf,image/*,.musicxml,.xml,.mxl" style="flex:1;min-width:180px"><button id="pt-btn" onclick="deposerPartition()">Joindre</button></div></div></section>
-    <section id="videos"><h2>Vidéos</h2><p class="legende">Choisissez le pupitre (ou Général), puis collez le lien YouTube.</p>
+    <section id="videos"><h2>Vidéos</h2><p class="legende">Choisissez le rôle (ou Général), puis collez le lien YouTube.</p>
       <div class="carte"><div class="ligne"><select id="nl-pupitre" style="flex:1;min-width:180px"></select>
         <select id="nl-cat"><option value="original">original</option><option value="reprise">reprise</option><option value="tuto">tuto</option><option value="autre" selected>autre</option></select></div>
         <div class="ligne"><input id="nl-url" type="url" placeholder="https://youtube.com/…" inputmode="url"><input id="nl-titre" type="text" placeholder="Titre"><button onclick="ajouterLien()">Partager</button></div></div>
@@ -859,6 +894,16 @@ function inviterProjet(slug){
   if(navigator.share){ navigator.share({title:PROJET.meta.titre,text:"Rejoins le projet !",url}).catch(()=>{}); return; }
   navigator.clipboard.writeText(t).then(()=>alerte("Invitation copiée.")).catch(()=>prompt("Copiez ce lien :",url));
 }
+async function rejoindreProjet(){ if(!exigerId())return;
+  try{ await upsert("proj_membres",{projet_id:pid(),personne_id:MOI.id},"projet_id,personne_id"); rafraichir(); alerte("Vous avez rejoint le projet."); }
+  catch(e){ alerte("Impossible : "+e.message); } }
+async function quitterProjet(){ if(!MOI)return;
+  if(!confirm("Quitter « "+PROJET.meta.titre+" » ?\nVos rôles dans ce projet seront libérés (partitions, vidéos et messages restent)."))return;
+  try{
+    await effacer("proj_inscriptions","projet_id=eq."+pid()+"&personne_id=eq."+MOI.id);
+    await effacer("proj_membres","projet_id=eq."+pid()+"&personne_id=eq."+MOI.id);
+    rafraichir(); alerte("Vous avez quitté le projet.");
+  }catch(e){ alerte("Impossible : "+e.message); } }
 
 /* ---- pupitres ---- */
 const LIB_STATUT={apprentissage:"en apprentissage",jouable:"jouable",maitrise:"maîtrisé"};
@@ -866,7 +911,7 @@ function remplirSelectPupitre(elId,avecGeneral){
   const sel=document.getElementById(elId); if(!sel) return; const avant=sel.value;
   let opts=avecGeneral?'<option value="">Général (tout le monde)</option>':"";
   if(PROJET.pupitres.length) opts+=PROJET.pupitres.map(p=>`<option value="${p.id}">${esc(p.instrument)}</option>`).join("");
-  else if(!avecGeneral) opts='<option value="">Ajoutez d\'abord un pupitre</option>';
+  else if(!avecGeneral) opts='<option value="">Ajoutez d\'abord un rôle</option>';
   sel.innerHTML=opts; if(avant&&[...sel.options].some(o=>o.value===avant)) sel.value=avant;
 }
 function rendrePupitres(){
@@ -883,24 +928,24 @@ function rendrePupitres(){
       return `<div class="inscrit"><span class="p">${esc(nom(i.personne_id))}</span><span class="statut">${LIB_STATUT[i.statut]||""}</span></div>`;
     }).join("");
     const corps=ins.length?`<div class="inscrits">${rangs}</div>`:`<p class="vide">Personne pour l'instant.</p>`;
-    const action=mien?"":`<div class="pup-action"><button class="discret" onclick="inscrire('${p.id}')">M'inscrire sur ce pupitre</button></div>`;
+    const action=mien?"":`<div class="pup-action"><button class="discret" onclick="inscrire('${p.id}')">Prendre ce rôle</button></div>`;
     return `<div class="carte"><div class="pup-tete"><span class="nom">${esc(p.instrument)}</span><span class="badge b-${esc(p.besoin)}">${esc(p.besoin)}</span></div>
       ${p.note?`<div class="pup-note">${esc(p.note)}</div>`:""}${corps}${action}</div>`;
   }).join("");
 }
-async function inscrire(pupId){ if(!exigerId())return; try{ await inserer("proj_inscriptions",{projet_id:pid(),pupitre_id:pupId,personne_id:MOI.id,statut:"apprentissage"}); rafraichir(); }catch(e){ alerte("Inscription impossible : "+e.message); } }
+async function inscrire(pupId){ if(!exigerId())return; try{ await upsert("proj_membres",{projet_id:pid(),personne_id:MOI.id},"projet_id,personne_id"); await inserer("proj_inscriptions",{projet_id:pid(),pupitre_id:pupId,personne_id:MOI.id,statut:"apprentissage"}); rafraichir(); }catch(e){ alerte("Inscription impossible : "+e.message); } }
 async function desinscrire(id){ try{ await effacer("proj_inscriptions","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
 async function changerStatut(id,s){ try{ await modifier("proj_inscriptions","id=eq."+id,{statut:s}); rafraichir(); }catch(e){ alerte(e.message); } }
-async function ajouterPupitre(){ if(!exigerId())return; const nom2=document.getElementById("np2-nom").value.trim(); if(!nom2)return alerte("Nom du pupitre ?"); const besoin=document.getElementById("np2-besoin").value; try{ await inserer("proj_pupitres",{projet_id:pid(),instrument:nom2,besoin}); document.getElementById("np2-nom").value=""; rafraichir(); }catch(e){ alerte(e.message); } }
+async function ajouterPupitre(){ if(!exigerId())return; const nom2=document.getElementById("np2-nom").value.trim(); if(!nom2)return alerte("Nom du rôle ?"); const besoin=document.getElementById("np2-besoin").value; try{ await inserer("proj_pupitres",{projet_id:pid(),instrument:nom2,besoin}); document.getElementById("np2-nom").value=""; rafraichir(); }catch(e){ alerte(e.message); } }
 
 /* ---- participants + pupitre principal ---- */
 function moiMembre(){ return PROJET.membres.find(m=>MOI&&m.personne_id===MOI.id); }
 function rendrePrincipal(){
   const z=document.getElementById("zone-principal"); if(!z) return;
-  if(!MOI){ z.innerHTML=""; return; }
+  if(!MOI||!moiMembre()){ z.innerHTML=""; return; }
   const m=moiMembre(); const cur=m&&m.pupitre_principal_id?m.pupitre_principal_id:"";
   const opts='<option value="">—</option>'+PROJET.pupitres.map(p=>`<option value="${p.id}" ${p.id===cur?"selected":""}>${esc(p.instrument)}</option>`).join("");
-  z.innerHTML=`<span class="cle">Mon pupitre principal :</span> <select onchange="definirPrincipal(this.value)">${opts}</select>`;
+  z.innerHTML=`<span class="cle">Mon rôle principal :</span> <select onchange="definirPrincipal(this.value)">${opts}</select>`;
 }
 function badgeKawaii(instr){ return `<span class="kawaii"><span class="etoile" aria-hidden="true">✦</span>${esc(instr)}</span>`; }
 function rendreParticipants(){
@@ -915,7 +960,7 @@ function rendreParticipants(){
     const ids=[...new Set(PROJET.inscriptions.filter(i=>i.personne_id===m.personne_id).map(i=>i.pupitre_id))];
     const autres=ids.filter(id=>id!==m.pupitre_principal_id).map(nomPup).filter(Boolean);
     return `<div class="carte"><div class="parti-tete"><span class="pnom ${self?"self":""}">${esc(nom(m.personne_id))}</span>
-      ${principal?badgeKawaii(principal):'<span class="sans">pupitre à définir</span>'}</div>
+      ${principal?badgeKawaii(principal):'<span class="sans">rôle à définir</span>'}</div>
       ${autres.length?`<div class="proles">aussi : ${autres.map(esc).join(", ")}</div>`:""}</div>`;
   }).join("");
 }
@@ -977,7 +1022,7 @@ function rendrePartitions(){
 }
 async function deposerPartition(){
   if(!exigerId())return;
-  const pupId=document.getElementById("pt-pupitre").value; if(!pupId)return alerte("Choisissez un pupitre (ajoutez-en un au besoin).");
+  const pupId=document.getElementById("pt-pupitre").value; if(!pupId)return alerte("Choisissez un rôle (ajoutez-en un au besoin).");
   const input=document.getElementById("pt-fichier"), file=input.files[0]; if(!file)return alerte("Choisissez un fichier.");
   if(file.size>20*1024*1024)return alerte("Fichier trop lourd (20 Mo max).");
   const btn=document.getElementById("pt-btn"); btn.disabled=true; btn.textContent="Envoi…";
@@ -1046,9 +1091,9 @@ const TUTO=[
   {e:"🎵",t:"Bienvenue",c:"Ici, la classe monte des reprises ensemble. Chaque morceau est un « projet » : on s'inscrit aux instruments, on partage partitions et vidéos, et on fixe les répétitions. Ce petit guide fait le tour en quelques écrans."},
   {e:"🙋",t:"Identifiez-vous",c:"En haut à droite, entrez votre prénom et votre nom. On affiche « Prénom + initiale » (ex. Jean D.). Pas de mot de passe : la même identité vous suit sur toutes les pages. Si un homonyme existe déjà, un message vous prévient."},
   {e:"💿",t:"Choisissez un morceau",c:"Sur l'accueil, chaque jaquette est un projet — cliquez pour entrer. Vous pouvez aussi proposer un titre depuis la bande du haut. Chaque projet garde sa propre ambiance visuelle."},
-  {e:"🎸",t:"Prenez un pupitre",c:"Dans un projet, inscrivez-vous à un ou plusieurs instruments. Plusieurs personnes peuvent tenir le même pupitre — pas de compétition pour une place."},
+  {e:"🎸",t:"Prenez un rôle",c:"Dans un projet, inscrivez-vous à un ou plusieurs rôles (instruments, chant…). Plusieurs personnes peuvent tenir le même rôle — pas de compétition pour une place."},
   {e:"📅",t:"Vos disponibilités",c:"L'onglet « Mes dispos » : touchez vos créneaux libres de la semaine. Plus une case est foncée, plus il y a de monde disponible — c'est le meilleur moment pour répéter. Vos dispos valent pour tous les projets."},
-  {e:"🎶",t:"Partagez & échangez",c:"Déposez des partitions (PDF ou image), collez des liens YouTube par pupitre, répondez aux propositions de répétition et discutez dans les messages du projet."},
+  {e:"🎶",t:"Partagez & échangez",c:"Déposez des partitions (PDF ou image), collez des liens YouTube par rôle, répondez aux propositions de répétition et discutez dans les messages du projet."},
   {e:"✨",t:"C'est à vous",c:"Vous pourrez rouvrir ce guide à tout moment via « Guide » en haut. Bonne musique !"}
 ];
 let tutoI=0;
