@@ -199,6 +199,17 @@
   .tuile[data-univers="outrun"] .art .motif{opacity:.6;filter:drop-shadow(0 0 8px rgba(255,255,255,.35))}
   .scope-projet .projet-hero .motif-hero{position:absolute;right:16px;bottom:-10px;width:150px;height:150px;color:var(--acc);opacity:.15;pointer-events:none;z-index:1}
 
+  /* Enregistrements audio */
+  .rec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c0392b;margin-right:6px;vertical-align:baseline}
+  @media (prefers-reduced-motion: no-preference){.rec-en-cours .rec-dot{animation:recPulse 1s ease-in-out infinite}@keyframes recPulse{0%,100%{opacity:1}50%{opacity:.25}}}
+  .rec-chrono{font-family:var(--mono);font-size:.95rem;color:var(--acc2);min-width:52px;display:inline-block}
+  .audio-item{background:var(--panel2);border-radius:9px;padding:8px 12px;margin-bottom:6px}
+  .audio-item audio{width:100%;margin-top:6px;display:block}
+  .audio-item .doc a{color:var(--acc2);font-weight:600;text-decoration:none;word-break:break-word}
+  .audio-item .doc a:hover{text-decoration:underline}
+  .audio-item .m{color:var(--sub);font-size:.8rem;margin-top:2px}
+  .rec-apercu{margin-top:10px}
+
   /* Formulaires */
   input,select,textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
     border-radius:10px;padding:9px 12px;font:inherit;font-size:.95rem;max-width:100%}
@@ -833,7 +844,7 @@ async function vueProjet(app, slug){
   const meta=HUB.projets.find(p=>p.slug===slug);
   if(!meta){ app.innerHTML='<a class="retour" href="#/">← Accueil</a><p class="legende">Projet introuvable.</p>'; return; }
   const pid=meta.id;
-  const [pu,me,ins,re,pr,pa,li,ms]=await Promise.all([
+  const [pu,me,ins,re,pr,pa,li,ms,au]=await Promise.all([
     lire("proj_pupitres","&projet_id=eq."+pid+"&order=created_at.asc"),
     lire("proj_membres","&projet_id=eq."+pid),
     lire("proj_inscriptions","&projet_id=eq."+pid),
@@ -841,9 +852,10 @@ async function vueProjet(app, slug){
     lire("proj_presences","&projet_id=eq."+pid),
     lire("proj_partitions","&projet_id=eq."+pid),
     lire("proj_liens","&projet_id=eq."+pid+"&order=created_at.desc"),
-    lire("proj_messages","&projet_id=eq."+pid+"&order=created_at.asc")
+    lire("proj_messages","&projet_id=eq."+pid+"&order=created_at.asc"),
+    lire("proj_audios","&projet_id=eq."+pid+"&order=created_at.desc")
   ]);
-  PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms};
+  PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms,audios:au};
   const estMembre=!!(MOI&&me.some(m=>m.personne_id===MOI.id));
   const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]];
   const univers=meta.univers||"fm";
@@ -877,6 +889,23 @@ async function vueProjet(app, slug){
       <div class="carte"><span class="ss-titre">Déposer une partition</span>
         <div class="ligne"><select id="pt-pupitre" style="flex:1;min-width:180px"></select></div>
         <div class="ligne"><input id="pt-fichier" type="file" accept=".pdf,image/*,.musicxml,.xml,.mxl" style="flex:1;min-width:180px"><button id="pt-btn" onclick="deposerPartition()">Joindre</button></div></div></section>
+    <section id="audios"><h2>Enregistrements${aide("Enregistre-toi directement au micro, dépose un audio déjà fait, ou colle un lien (Drive, WhatsApp…). Chaque audio peut être nommé et adressé à un rôle ou à tout le monde.")}</h2>
+      <p class="legende">Enregistre au micro, dépose un fichier audio, ou colle un lien — pour un rôle ou en Général.</p>
+      <div class="carte">
+        <div class="ligne"><select id="au-pupitre" style="flex:1;min-width:180px"></select>
+          <input id="au-titre" type="text" placeholder="Nom de l'enregistrement" class="pousse"></div>
+        <div class="ligne" id="au-rec-ctrl">
+          <button id="au-rec-btn" onclick="basculerRec()"><span class="rec-dot" aria-hidden="true"></span>Enregistrer au micro</button>
+          <span class="rec-chrono" id="au-chrono"></span>
+        </div>
+        <div class="rec-apercu" id="au-apercu" hidden>
+          <audio id="au-preview" controls></audio>
+          <div class="ligne"><button onclick="publierRec()">Publier cet enregistrement</button><button class="discret" onclick="annulerRec()">jeter</button></div>
+        </div>
+        <div class="ligne"><input id="au-fichier" type="file" accept="audio/*" style="flex:1;min-width:180px"><button id="au-dep-btn" onclick="deposerAudio()">Déposer le fichier</button></div>
+        <div class="ligne"><input id="au-url" type="url" placeholder="https://… (lien vers un audio)" inputmode="url" class="pousse"><button onclick="ajouterAudioLien()">Ajouter le lien</button></div>
+      </div>
+      <div id="liste-audios"></div></section>
     <section id="videos"><h2>Vidéos</h2><p class="legende">Choisissez le rôle (ou Général), puis collez le lien YouTube.</p>
       <div class="carte"><div class="ligne"><select id="nl-pupitre" style="flex:1;min-width:180px"></select>
         <select id="nl-cat"><option value="original">original</option><option value="reprise">reprise</option><option value="tuto">tuto</option><option value="autre" selected>autre</option></select></div>
@@ -885,7 +914,7 @@ async function vueProjet(app, slug){
     <section id="messages"><h2>Messages</h2><p class="legende">Petit fil entre participants.</p><div id="fil-messages"></div>
       <div class="ligne"><input id="nm-texte" class="pousse" type="text" placeholder="Votre message…" onkeydown="if(event.key==='Enter')envoyerMessage()"><button onclick="envoyerMessage()">Envoyer</button></div></section>
     </div>`;
-  rendrePupitres(); rendreParticipants(); rendreRepets(); rendrePartitions(); rendreLiens(); rendreMessages();
+  rendrePupitres(); rendreParticipants(); rendreRepets(); rendrePartitions(); rendreAudios(); rendreLiens(); rendreMessages();
 }
 function pid(){ return PROJET.meta.id; }
 function inviterProjet(slug){
@@ -1039,6 +1068,109 @@ async function deposerPartition(){
 async function supprimerPartition(id){ const p=PROJET.partitions.find(x=>x.id===id);
   try{ if(p) await fetch(SB_URL+"/storage/v1/object/"+BUCKET+"/"+p.chemin.split("/").map(enc).join("/"),{method:"DELETE",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY}}); await effacer("proj_partitions","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
 
+/* ---- enregistrements audio ---- */
+let REC={mr:null,chunks:[],blob:null,mime:"",timer:null,t0:0};
+function chronoTxt(ms){ const s=Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function extAudio(mime){ if(!mime)return "webm"; if(mime.includes("mp4"))return "m4a"; if(mime.includes("ogg"))return "ogg"; if(mime.includes("mpeg"))return "mp3"; if(mime.includes("wav"))return "wav"; return "webm"; }
+function micDispo(){ return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder); }
+async function basculerRec(){
+  if(REC.mr&&REC.mr.state==="recording"){ REC.mr.stop(); return; }
+  if(!exigerId()) return;
+  if(!micDispo()) return alerte("Micro indisponible sur ce navigateur — dépose un fichier audio à la place.");
+  try{
+    const flux=await navigator.mediaDevices.getUserMedia({audio:true});
+    const pref=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"].find(t=>{try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;}});
+    REC.mr=pref?new MediaRecorder(flux,{mimeType:pref}):new MediaRecorder(flux);
+    REC.chunks=[]; REC.blob=null; REC.mime=REC.mr.mimeType||pref||"audio/webm";
+    REC.mr.ondataavailable=e=>{ if(e.data&&e.data.size) REC.chunks.push(e.data); };
+    REC.mr.onstop=()=>{
+      flux.getTracks().forEach(t=>t.stop());
+      clearInterval(REC.timer);
+      REC.blob=new Blob(REC.chunks,{type:REC.mime});
+      const ctrl=document.getElementById("au-rec-ctrl"), btn=document.getElementById("au-rec-btn");
+      if(ctrl) ctrl.classList.remove("rec-en-cours");
+      if(btn) btn.innerHTML='<span class="rec-dot" aria-hidden="true"></span>Recommencer';
+      const ap=document.getElementById("au-apercu"), pv=document.getElementById("au-preview");
+      if(ap&&pv){ pv.src=URL.createObjectURL(REC.blob); ap.hidden=false; }
+    };
+    REC.mr.start();
+    REC.t0=Date.now();
+    const ch=document.getElementById("au-chrono");
+    REC.timer=setInterval(()=>{ if(ch) ch.textContent=chronoTxt(Date.now()-REC.t0); },250);
+    const ctrl=document.getElementById("au-rec-ctrl"), btn=document.getElementById("au-rec-btn"), ap=document.getElementById("au-apercu");
+    if(ctrl) ctrl.classList.add("rec-en-cours");
+    if(btn) btn.innerHTML='<span class="rec-dot" aria-hidden="true"></span>Arrêter';
+    if(ap) ap.hidden=true;
+  }catch(e){ alerte("Accès micro refusé ou impossible : "+e.message); }
+}
+function annulerRec(){ REC.blob=null; REC.chunks=[];
+  const ap=document.getElementById("au-apercu"), btn=document.getElementById("au-rec-btn"), ch=document.getElementById("au-chrono");
+  if(ap) ap.hidden=true; if(ch) ch.textContent="";
+  if(btn) btn.innerHTML='<span class="rec-dot" aria-hidden="true"></span>Enregistrer au micro'; }
+function titreAudioSaisi(defaut){ const c=document.getElementById("au-titre"); const t=(c&&c.value.trim())||""; return t||defaut; }
+function pupitreAudioSaisi(){ const s=document.getElementById("au-pupitre"); return (s&&s.value)||null; }
+async function televerserAudio(blobOuFichier, nomFichier, mime, titre){
+  if(blobOuFichier.size>20*1024*1024) throw new Error("Fichier trop lourd (20 Mo max).");
+  const pupId=pupitreAudioSaisi();
+  const sur=nomFichier.replace(/[^\w.\-]+/g,"_").slice(0,80);
+  const chemin=pid()+"/audio/"+(pupId||"general")+"/"+Date.now()+"-"+sur;
+  const rep=await fetch(SB_URL+"/storage/v1/object/"+BUCKET+"/"+chemin.split("/").map(enc).join("/"),{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":mime||"application/octet-stream"},body:blobOuFichier});
+  if(!rep.ok) throw new Error(rep.status+" "+await rep.text());
+  await inserer("proj_audios",{projet_id:pid(),pupitre_id:pupId,personne_id:MOI.id,titre,type:"fichier",chemin,mime:mime||null,taille:blobOuFichier.size});
+}
+async function publierRec(){
+  if(!exigerId()) return;
+  if(!REC.blob) return alerte("Rien à publier — enregistre d'abord.");
+  const d=new Date(); const defaut="Enregistrement du "+d.toLocaleDateString("fr-BE",{day:"numeric",month:"short"})+" "+d.toLocaleTimeString("fr-BE",{hour:"2-digit",minute:"2-digit"});
+  const titre=titreAudioSaisi(defaut);
+  try{ await televerserAudio(REC.blob, titre.replace(/\s+/g,"_")+"."+extAudio(REC.mime), REC.mime, titre); annulerRec(); const c=document.getElementById("au-titre"); if(c)c.value=""; rafraichir(); alerte("Enregistrement publié."); }
+  catch(e){ alerte("Publication impossible : "+e.message); }
+}
+async function deposerAudio(){
+  if(!exigerId()) return;
+  const input=document.getElementById("au-fichier"), file=input&&input.files[0];
+  if(!file) return alerte("Choisissez un fichier audio.");
+  const btn=document.getElementById("au-dep-btn"); if(btn){btn.disabled=true;btn.textContent="Envoi…";}
+  try{ await televerserAudio(file, file.name, file.type, titreAudioSaisi(file.name)); input.value=""; const c=document.getElementById("au-titre"); if(c)c.value=""; rafraichir(); alerte("Audio déposé."); }
+  catch(e){ alerte("Envoi impossible : "+e.message); }
+  finally{ if(btn){btn.disabled=false;btn.textContent="Déposer le fichier";} }
+}
+async function ajouterAudioLien(){
+  if(!exigerId()) return;
+  const c=document.getElementById("au-url"); const url=(c&&c.value.trim())||"";
+  if(!url) return alerte("Collez un lien.");
+  if(!/^https?:\/\//i.test(url)) return alerte("Lien invalide.");
+  try{ await inserer("proj_audios",{projet_id:pid(),pupitre_id:pupitreAudioSaisi(),personne_id:MOI.id,titre:titreAudioSaisi(url),type:"lien",url}); c.value=""; const t=document.getElementById("au-titre"); if(t)t.value=""; rafraichir(); alerte("Lien ajouté."); }
+  catch(e){ alerte("Impossible : "+e.message); }
+}
+function rendreAudios(){
+  remplirSelectPupitre("au-pupitre",true);
+  if(!micDispo()){ const b=document.getElementById("au-rec-btn"); if(b){ b.disabled=true; b.textContent="Micro indisponible ici"; } }
+  const z=document.getElementById("liste-audios"); if(!z) return;
+  const audios=PROJET.audios||[];
+  if(!audios.length){ z.innerHTML='<p class="legende">Aucun enregistrement pour l\'instant.</p>'; return; }
+  const item=a=>{
+    const suppr=(MOI&&a.personne_id===MOI.id)?` <button class="discret" onclick="supprimerAudio('${a.id}')">retirer</button>`:"";
+    const corps=a.type==="lien"
+      ? `<div class="doc"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.titre||a.url)}</a></div>`
+      : `<div class="doc"><span style="font-weight:600">${esc(a.titre||a.chemin.split("/").pop())}</span><audio controls preload="none" src="${urlPublique(a.chemin)}"></audio></div>`;
+    return `<div class="audio-item">${corps}<div class="m">${a.type==="lien"?"lien":"audio"} · partagé par ${esc(nom(a.personne_id))}${a.taille?" · "+tailleLisible(a.taille):""}${suppr}</div></div>`;
+  };
+  const groupes=[{id:null,nom:"Général",besoin:null},...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin}))];
+  z.innerHTML=groupes.map(g=>{
+    const items=audios.filter(a=>a.pupitre_id===g.id); if(!items.length) return "";
+    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
+    return `<p class="grp-titre">${esc(g.nom)} ${badge}</p>${items.map(item).join("")}`;
+  }).join("")||'<p class="legende">Aucun enregistrement pour l\'instant.</p>';
+}
+async function supprimerAudio(id){
+  const a=(PROJET.audios||[]).find(x=>x.id===id);
+  try{
+    if(a&&a.type==="fichier"&&a.chemin) await fetch(SB_URL+"/storage/v1/object/"+BUCKET+"/"+a.chemin.split("/").map(enc).join("/"),{method:"DELETE",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY}});
+    await effacer("proj_audios","id=eq."+id); rafraichir();
+  }catch(e){ alerte(e.message); }
+}
+
 /* ---- vidéos ---- */
 function idYoutube(url){ const m=String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/); return m?m[1]:null; }
 function rendreLiens(){
@@ -1132,6 +1264,8 @@ function fermerTuto(){ const ov=document.getElementById("tuto-overlay"); if(ov) 
 router();
 try{ if(!localStorage.getItem("jam-onboard-vu")) setTimeout(()=>ouvrirTuto(0),400); }catch(e){}
 function saisieEnCours(){
+  if(REC.mr&&REC.mr.state==="recording") return true;
+  if(REC.blob) return true;
   const a=document.activeElement;
   if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type!=="button" && a.type!=="submit") return true;
   const champs=document.querySelectorAll('input[type=text],input[type=url],input[type=number],input[type=datetime-local],textarea');
