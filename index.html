@@ -844,7 +844,7 @@ async function vueProjet(app, slug){
   const meta=HUB.projets.find(p=>p.slug===slug);
   if(!meta){ app.innerHTML='<a class="retour" href="#/">← Accueil</a><p class="legende">Projet introuvable.</p>'; return; }
   const pid=meta.id;
-  const [pu,me,ins,re,pr,pa,li,ms,au]=await Promise.all([
+  const [pu,me,ins,re,pr,pa,li,ms,au,gr]=await Promise.all([
     lire("proj_pupitres","&projet_id=eq."+pid+"&order=created_at.asc"),
     lire("proj_membres","&projet_id=eq."+pid),
     lire("proj_inscriptions","&projet_id=eq."+pid),
@@ -853,9 +853,10 @@ async function vueProjet(app, slug){
     lire("proj_partitions","&projet_id=eq."+pid),
     lire("proj_liens","&projet_id=eq."+pid+"&order=created_at.desc"),
     lire("proj_messages","&projet_id=eq."+pid+"&order=created_at.asc"),
-    lire("proj_audios","&projet_id=eq."+pid+"&order=created_at.desc")
+    lire("proj_audios","&projet_id=eq."+pid+"&order=created_at.desc"),
+    lire("proj_grilles","&projet_id=eq."+pid+"&order=created_at.desc")
   ]);
-  PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms,audios:au};
+  PROJET={meta,pupitres:pu,membres:me,inscriptions:ins,repets:re,presences:pr,partitions:pa,liens:li,messages:ms,audios:au,grilles:gr};
   const estMembre=!!(MOI&&me.some(m=>m.personne_id===MOI.id));
   const infos=[["Tonalité",meta.tonalite||"—"],["Tempo",meta.tempo?meta.tempo+" BPM":"—"]];
   const univers=meta.univers||"fm";
@@ -906,6 +907,15 @@ async function vueProjet(app, slug){
         <div class="ligne"><input id="au-url" type="url" placeholder="https://… (lien vers un audio)" inputmode="url" class="pousse"><button onclick="ajouterAudioLien()">Ajouter le lien</button></div>
       </div>
       <div id="liste-audios"></div></section>
+    <section id="grilles"><h2>Grilles cajón${aide("Collez ici le JSON complet exporté depuis l'Atelier Cajón (onglet Import / Export → Copier). Le percussionniste ouvre ensuite la grille directement dans l'Atelier, avec le parcours d'étude et le tempo réglable.")}</h2>
+      <p class="legende">Une grille toute faite de l'Atelier Cajón, prête à travailler : le bouton l'ouvre dans l'Atelier avec le parcours d'étude et la vitesse réglable.</p>
+      <div class="carte">
+        <div class="ligne"><select id="gr-pupitre" style="flex:1;min-width:180px"></select>
+          <input id="gr-titre" type="text" placeholder="Nom de la grille" class="pousse"></div>
+        <div class="ligne"><textarea id="gr-json" placeholder='Collez le « JSON complet » de l&#39;Atelier Cajón ici' style="flex:1;min-width:100%;min-height:74px;font-family:var(--mono);font-size:.8rem"></textarea></div>
+        <div class="ligne"><button onclick="ajouterGrille()">Ajouter la grille</button></div>
+      </div>
+      <div id="liste-grilles"></div></section>
     <section id="videos"><h2>Vidéos</h2><p class="legende">Choisissez le rôle (ou Général), puis collez le lien YouTube.</p>
       <div class="carte"><div class="ligne"><select id="nl-pupitre" style="flex:1;min-width:180px"></select>
         <select id="nl-cat"><option value="original">original</option><option value="reprise">reprise</option><option value="tuto">tuto</option><option value="autre" selected>autre</option></select></div>
@@ -914,7 +924,7 @@ async function vueProjet(app, slug){
     <section id="messages"><h2>Messages</h2><p class="legende">Petit fil entre participants.</p><div id="fil-messages"></div>
       <div class="ligne"><input id="nm-texte" class="pousse" type="text" placeholder="Votre message…" onkeydown="if(event.key==='Enter')envoyerMessage()"><button onclick="envoyerMessage()">Envoyer</button></div></section>
     </div>`;
-  rendrePupitres(); rendreParticipants(); rendreRepets(); rendrePartitions(); rendreAudios(); rendreLiens(); rendreMessages();
+  rendrePupitres(); rendreParticipants(); rendreRepets(); rendrePartitions(); rendreAudios(); rendreGrilles(); rendreLiens(); rendreMessages();
 }
 function pid(){ return PROJET.meta.id; }
 function inviterProjet(slug){
@@ -1170,6 +1180,52 @@ async function supprimerAudio(id){
     await effacer("proj_audios","id=eq."+id); rafraichir();
   }catch(e){ alerte(e.message); }
 }
+
+/* ---- grilles cajón (Atelier Cajón) ---- */
+const ATELIER_CAJON_URL="https://nmulongo-sys.github.io/magic-drums/cajon.html";
+function b64urlUtf8(s){ return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+function lienAtelier(contenu){ return ATELIER_CAJON_URL+"#g="+b64urlUtf8(JSON.stringify(contenu))+"&tab=parcours"; }
+function validerGrille(txt){
+  const d=JSON.parse(txt);
+  if(!d||!Array.isArray(d.measures)||!d.measures.length||!d.measures.every(m=>Array.isArray(m))) throw new Error("le JSON ne contient pas de « measures » valide");
+  return d;
+}
+async function ajouterGrille(){
+  if(!exigerId()) return;
+  const zone=document.getElementById("gr-json"); const txt=(zone&&zone.value.trim())||"";
+  if(!txt) return alerte("Collez le JSON complet exporté depuis l'Atelier Cajón.");
+  let contenu;
+  try{ contenu=validerGrille(txt); }
+  catch(e){ return alerte("Grille illisible : "+e.message+". Utilisez « JSON complet → Copier » dans l'Atelier."); }
+  const t=document.getElementById("gr-titre");
+  const titre=(t&&t.value.trim())||contenu.title||"Grille cajón";
+  const sel=document.getElementById("gr-pupitre");
+  try{
+    await inserer("proj_grilles",{projet_id:pid(),pupitre_id:(sel&&sel.value)||null,personne_id:MOI.id,titre,contenu});
+    zone.value=""; if(t)t.value=""; rafraichir(); alerte("Grille ajoutée.");
+  }catch(e){ alerte("Impossible : "+e.message); }
+}
+function rendreGrilles(){
+  remplirSelectPupitre("gr-pupitre",true);
+  const z=document.getElementById("liste-grilles"); if(!z) return;
+  const grilles=PROJET.grilles||[];
+  if(!grilles.length){ z.innerHTML='<p class="legende">Aucune grille pour l\'instant.</p>'; return; }
+  const item=g=>{
+    const c=g.contenu||{}; const nbM=Array.isArray(c.measures)?c.measures.length:0;
+    const resume=[nbM+" mesure"+(nbM>1?"s":""), c.bpm?c.bpm+" BPM":null, (c.swing&&c.swing!==50)?"swing "+c.swing+"%":null].filter(Boolean).join(" · ");
+    const suppr=(MOI&&g.personne_id===MOI.id)?` <button class="discret" onclick="supprimerGrille('${g.id}')">retirer</button>`:"";
+    return `<div class="audio-item"><div class="doc"><span style="font-weight:600">${esc(g.titre||"Grille")}</span>
+      <div class="m">${esc(resume)} · partagée par ${esc(nom(g.personne_id))}${suppr}</div></div>
+      <div class="ligne" style="margin-top:8px"><a href="${esc(lienAtelier(c))}" target="_blank" rel="noopener" style="text-decoration:none"><button>▶ S'entraîner (parcours)</button></a></div></div>`;
+  };
+  const groupes=[{id:null,nom:"Général",besoin:null},...PROJET.pupitres.map(p=>({id:p.id,nom:p.instrument,besoin:p.besoin}))];
+  z.innerHTML=groupes.map(g=>{
+    const items=grilles.filter(x=>x.pupitre_id===g.id); if(!items.length) return "";
+    const badge=g.besoin?`<span class="b b-${esc(g.besoin)}">${esc(g.besoin)}</span>`:"";
+    return `<p class="grp-titre">${esc(g.nom)} ${badge}</p>${items.map(item).join("")}`;
+  }).join("")||'<p class="legende">Aucune grille pour l\'instant.</p>';
+}
+async function supprimerGrille(id){ try{ await effacer("proj_grilles","id=eq."+id); rafraichir(); }catch(e){ alerte(e.message); } }
 
 /* ---- vidéos ---- */
 function idYoutube(url){ const m=String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/); return m?m[1]:null; }
