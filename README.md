@@ -1,22 +1,74 @@
-# Nightcall — fiche projet collectif
+# jam-collective — plateforme de reprises de classe
 
-Page unique et autonome pour organiser une reprise collective de **Nightcall** (Kavinsky, 2010 — La mineur, ≈ 92 BPM, 4/4). One-shot inspiré du modèle Jam Maker +, mais réduit à un seul morceau, sans connexion ni compte.
+Page unique et autonome pour monter des reprises à plusieurs : chaque morceau est un
+projet où l'on s'inscrit à un pupitre, dépose partitions et vidéos, propose des
+répétitions et discute. Pensée pour une classe de formation musicale, sans compte ni
+installation.
+
+**En ligne** : https://nmulongo-sys.github.io/jam-collective/
+**Statut** : révision du 2026-07-23 • `index.html` unique, sans build ni dépendance embarquée.
+
+## Utilisation
+
+Ouvrir l'URL — rien à installer. On saisit un prénom (stocké localement), on choisit une
+jaquette sur l'accueil, on prend un ou plusieurs rôles, on coche ses disponibilités. Un
+guide de première connexion s'ouvre au tout premier passage et reste rouvrable via
+« Guide » dans la navigation. Fonctionne sur mobile.
 
 ## Fonctions
 
-- **Fiche morceau** : tonalité, tempo, mesure, durée, contexte (Drive, Lovefoxxx, Guy-Manuel de Homem-Christo).
-- **Pupitres** : liste pré-remplie (chant couplets, chant refrain, synthé lead, basse, batterie, guitare) avec niveau de besoin (indispensable / souhaitable / bonus). Chacun prend un pupitre, indique son statut (en apprentissage / jouable / maîtrisé), peut le libérer ou ajouter un pupitre.
-- **Vidéos utiles** : dépôt de liens YouTube (original, reprise, tuto, autre) avec vignette et lecture intégrée (youtube-nocookie) au clic. Chacun peut retirer ses propres liens.
-- **Messages** : petit fil partagé entre participants, rafraîchi automatiquement.
+- **Accueil** : mur de jaquettes façon étagère de DVD, une par morceau, chacune avec son
+  identité visuelle. Tri récent/alphabétique, filtres, bandeau playlist YouTube de classe
+  (compteur de morceaux dynamique), et formulaire de suggestion d'un titre.
+- **Page projet** : en-tête thématisé selon l'univers du morceau, fiche (tonalité, tempo,
+  proposé par), **histoire du morceau**, rôles, participants, partitions, vidéos, audios,
+  grilles, répétitions et messages.
+- **Rôles** : plusieurs personnes par rôle, niveau de besoin (indispensable / souhaitable /
+  bonus), statut personnel (apprentissage / jouable / maîtrisé).
+- **Vidéos** : liens YouTube par rôle ou en général, vignette et lecture intégrée
+  (`youtube-nocookie`) au clic.
+- **Disponibilités et répétitions** : créneaux partagés, propositions de répétition et
+  réponses de présence.
 
-## Architecture
+## Architecture & conventions
 
-- `index.html` unique, aucun build, aucune dépendance embarquée (polices Google Fonts uniquement).
-- Données partagées via **Supabase** (projet « Music Noel », `hifqtzxhmboxbruraiab`), API REST PostgREST en `fetch` direct — pas de SDK.
-- Tables : `nightcall_pupitres`, `nightcall_liens`, `nightcall_messages` (RLS activée, politiques anon ouvertes — app conviviale de classe, comme verrevacances).
-- Synchronisation par sondage toutes les 7 s + rafraîchissement au retour d'onglet (même approche que verrevacances).
+- `index.html` unique, aucun build, aucune dépendance embarquée (polices Google Fonts
+  uniquement). Échappement HTML systématique de toute donnée affichée.
+- Données partagées via **Supabase** (projet « Music Noel », `hifqtzxhmboxbruraiab`), API
+  REST PostgREST en `fetch` direct — pas de SDK. RLS activée, politiques anon ouvertes :
+  app conviviale de classe, comme verrevacances.
+- Tables lues au démarrage : `hub_projets`, `hub_personnes`, `hub_suggestions`,
+  `hub_dispos`, `proj_pupitres`, `proj_inscriptions`, `proj_membres`, `proj_liens`,
+  `proj_partitions`, `proj_audios`, `proj_grilles`, `proj_messages`, `proj_repets`,
+  `proj_presences`.
+- Synchronisation par sondage + rafraîchissement au retour d'onglet, suspendu pendant la
+  saisie (`saisieEnCours()`) pour ne pas effacer un champ en cours de frappe.
 - Identité légère : prénom en `localStorage`, aucune authentification.
-- Échappement HTML systématique de toute donnée affichée.
+- Persistance locale : `fm-theme` (thème clair/sombre), `jam-onboard-vu` (guide déjà vu).
+
+### Convention « univers »
+
+Chaque projet porte un champ `univers` (colonne `hub_projets.univers`) qui pilote
+entièrement son apparence. Un univers = **quatre points d'ancrage dans le code**, à
+renseigner ensemble sous peine de rendu incomplet :
+
+1. `.tuile[data-univers="…"]` — quatre règles CSS : fond de `.art`, filet `::after`,
+   dégradé de `.spine`, couleur de `.embleme`. C'est la jaquette d'accueil.
+2. `.scope-projet[data-univers="…"]` — le jeu de variables CSS (`--bg`, `--panel`, `--ink`,
+   `--acc`, `--acc2`, `--staff`…) plus le fond de `.projet-hero`. Les variables sont
+   surchargées **localement** par le conteneur : le hub reste en thème FM quoi qu'il arrive.
+3. `case "…"` dans `motifInner(u)` — le motif SVG, en coordonnées `viewBox="0 0 100 100"`,
+   couleurs en `currentColor`. Sert à la fois de vignette et de motif de hero.
+4. Une entrée d'animation du motif de hero (`scintilleMotif`, `flotteMotif`,
+   `respireMotif`, `balanceMotif`, `tourneMotif`), sous `prefers-reduced-motion`.
+
+Plus un `<option>` dans le sélecteur d'univers du formulaire de création. `motifSVG()`
+renvoie une chaîne vide pour un univers inconnu : l'absence de motif dégrade proprement.
+
+**Règle de conception : un univers par morceau.** Aucune jaquette ne doit en dupliquer
+une autre. Ajouter un morceau implique donc de créer son univers, et le motif se tire de
+préférence du *texte* de la chanson plutôt que de son genre musical — c'est ce qui rend
+la vignette identifiable au premier coup d'œil.
 
 ## Journal de développement
 
@@ -108,3 +160,28 @@ Note : `index.html` (appli mono-projet Nightcall v5) reste dans le dossier comme
 - **Tutoriel première connexion** : carrousel modal de 7 étapes (bienvenue → identité → choisir un morceau → prendre un pupitre → dispos → partager → c'est à vous), points de progression, Précédent/Suivant/Passer, navigation clavier (←/→/Échap), fermeture au clic sur le fond. S'ouvre automatiquement au tout premier passage (flag `localStorage jam-onboard-vu`) et **rouvrable à tout moment via « Guide »** dans la nav.
 - Nettoyage : suppression des derniers résidus de jetons outrun hors scope (la légende des dispos utilisait encore `--cyan` / « cases les plus vertes » → corrigé en `--acc2` / « les plus foncées »).
 - Validation headless : 16/16 + 5/5 sur le second lot (dernier écran, flag réel, non-réouverture).
+
+### 2026-07-23 — deux morceaux, deux univers inédits, champ « histoire »
+- **Ajout de deux morceaux** : *Je l'aime à mourir* (Francis Cabrel, 1979, do majeur, 76 BPM)
+  et *Maybe Tomorrow* (Stereophonics, 2003, sol mineur, 81 BPM), avec leurs cinq rôles
+  standard et leur lien YouTube de référence. Le répertoire passe à 20 morceaux.
+- **Deux univers graphiques inédits**, pour tenir la règle « une jaquette unique par
+  morceau » — les 18 univers existants étaient tous pris :
+  - `jardin-papier` (Cabrel) — cocotte en papier survolant une arche, sous deux étoiles ;
+    motif tiré du texte (« des cocottes en papier », « des ponts entre nous et le ciel »).
+    Palette vert-jardin crépusculaire + miel, tranche crème → vert tendre. Animation :
+    scintillement.
+  - `nuage-vagabond` (Stereophonics) — petit nuage qui pleut, route s'éloignant vers une
+    lueur (« these little black clouds keep walking around with me » / « maybe tomorrow
+    I'll find my way home »). Dégradé ardoise froide en haut, réchauffé vers le bas.
+    Animation : flottement.
+- **Champ `histoire`** : nouvelle colonne `hub_projets.histoire` (migration
+  `add_histoire_to_hub_projets`), affichée sur la page projet dans une carte
+  « L'histoire du morceau » (lettrine sur la couleur d'accent de l'univers). Peuplée pour
+  les 20 morceaux. À vérifier : les 18 notices antérieures sont rédigées de mémoire et non
+  sourcées une à une.
+- **Compteur de playlist dynamique** : le bandeau d'accueil annonçait « les 18 morceaux »
+  en dur ; il lit désormais `actifs.length` et ne demande plus de correction à chaque ajout.
+- Validation headless : 9/9 points d'insertion, contrôle syntaxique du bloc script
+  (`node --check`), parsing jsdom, rendu isolé des 20 motifs SVG, dégradation propre sur
+  univers inconnu. Contrôle d'unicité en base : 20 morceaux, 20 univers distincts.
