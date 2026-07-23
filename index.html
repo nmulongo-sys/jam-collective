@@ -167,6 +167,16 @@
   .tuile[data-univers="chanson-poetique"] .spine{background:linear-gradient(#e8e0ce,#7d93ad)}
   .tuile[data-univers="chanson-poetique"] .art .embleme{color:rgba(232,224,206,.35)}
 
+  .tuile[data-univers="jardin-papier"] .art{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(217,178,94,.06) 13px 14px),linear-gradient(160deg,#17231b,#35533f,#243a2c)}
+  .tuile[data-univers="jardin-papier"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#d9b25e,transparent)}
+  .tuile[data-univers="jardin-papier"] .spine{background:linear-gradient(#e6dcc4,#7a9c74)}
+  .tuile[data-univers="jardin-papier"] .art .embleme{color:rgba(217,178,94,.38)}
+
+  .tuile[data-univers="nuage-vagabond"] .art{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(230,169,95,.05) 13px 14px),linear-gradient(180deg,#222a33,#3c4652 55%,#5b5147)}
+  .tuile[data-univers="nuage-vagabond"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#e6a95f,transparent)}
+  .tuile[data-univers="nuage-vagabond"] .spine{background:linear-gradient(#90a0b0,#e6a95f)}
+  .tuile[data-univers="nuage-vagabond"] .art .embleme{color:rgba(230,169,95,.34)}
+
   .tuile[data-univers="vitrail"] .art{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(224,190,90,.06) 13px 14px),linear-gradient(160deg,#0d183a,#1c2c66,#122048)}
   .tuile[data-univers="vitrail"] .art::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#e0be5a,transparent)}
   .tuile[data-univers="vitrail"] .spine{background:linear-gradient(#e0be5a,#3a5bb0)}
@@ -253,6 +263,8 @@
   .ligne{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
   .ligne input[type=url],.ligne input.pousse,.ligne input[type=text]{flex:1;min-width:150px}
   .ss-titre{font-family:var(--serif);font-size:1.15rem;font-weight:600}
+  .carte.histoire p{margin:.5rem 0 0;line-height:1.62;color:var(--sub);font-size:.94rem}
+  .carte.histoire p::first-letter{font-family:var(--serif);font-size:1.5em;line-height:1;color:var(--acc)}
 
   /* Dispos heatmap */
   .grille-dispo{width:100%;border-collapse:separate;border-spacing:4px}
@@ -412,6 +424,10 @@
   .scope-projet[data-univers="britpop"] .projet-hero{background:linear-gradient(180deg,#20242c,#39424e 60%,#2c333c)}
   .scope-projet[data-univers="chanson-poetique"]{--bg:#212a36;--panel:#2a3542;--panel2:#32404f;--ink:#eef2f6;--sub:#aab6c2;--line:#3d4d5e;--acc:#7d93ad;--acc2:#e8e0ce;--accInk:#212a36;--staff:rgba(232,224,206,.05)}
   .scope-projet[data-univers="chanson-poetique"] .projet-hero{background:linear-gradient(180deg,#212a36,#43566e 60%,#33414f)}
+  .scope-projet[data-univers="jardin-papier"]{--bg:#17231b;--panel:#1f2f24;--panel2:#26382b;--ink:#eef3e9;--sub:#a9bda8;--line:#33472f;--acc:#d9b25e;--acc2:#8fb184;--accInk:#17231b;--staff:rgba(217,178,94,.05)}
+  .scope-projet[data-univers="jardin-papier"] .projet-hero{background:linear-gradient(180deg,#17231b,#35533f 60%,#243a2c)}
+  .scope-projet[data-univers="nuage-vagabond"]{--bg:#1d232b;--panel:#262e38;--panel2:#2e3742;--ink:#eef1f5;--sub:#a6b0bc;--line:#3a4551;--acc:#e6a95f;--acc2:#90a0b0;--accInk:#1d232b;--staff:rgba(230,169,95,.05)}
+  .scope-projet[data-univers="nuage-vagabond"] .projet-hero{background:linear-gradient(180deg,#1d232b,#3c4652 55%,#5b5147)}
   .scope-projet[data-univers="vitrail"]{--bg:#0c1430;--panel:#141e44;--panel2:#1a2650;--ink:#eae6ff;--sub:#a0a6cf;--line:#28336a;--acc:#e0be5a;--acc2:#3a5bb0;--accInk:#0c1430;--staff:rgba(224,190,90,.06)}
   .scope-projet[data-univers="vitrail"] .projet-hero{background:linear-gradient(180deg,#0c1430,#1c2c66 60%,#122048)}
   .scope-projet[data-univers="soul-vinyle"]{--bg:#1e120c;--panel:#2b1a12;--panel2:#332015;--ink:#f5e6d6;--sub:#c3a488;--line:#45301f;--acc:#e0a44a;--acc2:#8a4a24;--accInk:#1e120c;--staff:rgba(224,164,74,.06)}
@@ -442,13 +458,15 @@
     .scope-projet[data-univers="baroque-revolution"] .motif-hero{animation:heroLeve 1s ease-out,respireMotif 6s ease-in-out 1s infinite}
     .scope-projet[data-univers="nuit-pastel"] .motif-hero,
     .scope-projet[data-univers="chanson-poetique"] .motif-hero,
+    .scope-projet[data-univers="jardin-papier"] .motif-hero,
     .scope-projet[data-univers="jazz-nocturne"] .motif-hero,
     .scope-projet[data-univers="yeye-retro"] .motif-hero{animation:heroLeve 1s ease-out,scintilleMotif 3.5s ease-in-out 1s infinite}
     .scope-projet[data-univers="guinguette"] .motif-hero,
     .scope-projet[data-univers="rnb-pourpre"] .motif-hero,
     .scope-projet[data-univers="graphique-colorblock"] .motif-hero,
     .scope-projet[data-univers="britpop"] .motif-hero,
-    .scope-projet[data-univers="altrock-patine"] .motif-hero{animation:heroLeve 1s ease-out,flotteMotif 5s ease-in-out 1s infinite}
+    .scope-projet[data-univers="altrock-patine"] .motif-hero,
+    .scope-projet[data-univers="nuage-vagabond"] .motif-hero{animation:heroLeve 1s ease-out,flotteMotif 5s ease-in-out 1s infinite}
   }
 
   /* ===== Infobulles ===== */
@@ -661,6 +679,8 @@ function motifInner(u){switch(u){
  case "yeye-retro": return `<path fill="currentColor" d="M22 90 C28 74 31 70 35 66 L41 46 L48 20 L48 8 L52 8 L52 20 L59 46 L65 66 C69 70 72 74 78 90 L67 90 C63 79 57 75 50 75 C43 75 37 79 33 90 Z"/><rect x="35" y="64" width="30" height="3" fill="currentColor"/><rect x="41" y="44" width="18" height="3" fill="currentColor"/>`;
  case "jazz-nocturne": return `<path fill="currentColor" d="M74 12 a15 15 0 1 0 10 26 a12 12 0 1 1 -10 -26z"/><path d="M8 80 q30 -7 58 -2" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="42" cy="67" rx="13" ry="8.5" fill="currentColor"/><path d="M30 67 l-13 -7 4 9 -4 5z" fill="currentColor"/><circle cx="55" cy="59" r="5.5" fill="currentColor"/><path d="M60 58 l8 2.5 -8 2z" fill="currentColor"/><path d="M70 50 l1.5 -5 M75 47 l1.5 -5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
  case "duo-projecteur": return `<path d="M50 2 L20 92 L80 92 Z" fill="currentColor" opacity=".22"/><circle cx="38" cy="44" r="6.5" fill="currentColor"/><rect x="36.4" y="51" width="3.2" height="31" rx="1.5" fill="currentColor"/><path d="M29 88 q9 -5 18 0z" fill="currentColor"/><circle cx="62" cy="44" r="6.5" fill="currentColor"/><rect x="60.4" y="51" width="3.2" height="31" rx="1.5" fill="currentColor"/><path d="M53 88 q9 -5 18 0z" fill="currentColor"/>`;
+ case "jardin-papier": return `<g fill="currentColor"><path d="M12 60 L50 30 L46 56 Z"/><path d="M50 30 L88 45 L52 55 Z" opacity=".72"/><path d="M46 56 L60 72 L28 74 Z" opacity=".55"/><path d="M50 30 L59 19 L63 32 Z" opacity=".88"/></g><path d="M6 86 Q30 74 50 80 Q70 86 94 72" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".5"/><g fill="currentColor"><path d="M78 12 l1.8 4.4 4.4 1.8 -4.4 1.8 -1.8 4.4 -1.8-4.4 -4.4-1.8 4.4-1.8z"/><path d="M20 20 l1.3 3.2 3.2 1.3 -3.2 1.3 -1.3 3.2 -1.3-3.2 -3.2-1.3 3.2-1.3z"/></g>`;
+ case "nuage-vagabond": return `<path fill="currentColor" d="M26 34 q0-11 11-11 q4-9 14-7 q11-1 13 9 q10 1 10 9 t-10 9 H35 q-9 0-9-9z"/><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity=".65"><line x1="36" y1="55" x2="32" y2="64"/><line x1="48" y1="55" x2="44" y2="64"/><line x1="60" y1="55" x2="56" y2="64"/></g><path d="M14 94 Q38 82 52 72 Q64 63 82 58" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="84" cy="54" r="5.5" fill="currentColor" opacity=".8"/>`;
  default: return null;
 }}
 function motifSVG(u,cls){ const i=motifInner(u); return i?`<svg class="${cls}" viewBox="0 0 100 100" fill="none" aria-hidden="true">${i}</svg>`:""; }
@@ -716,7 +736,7 @@ function rendreAccueil(app){
   const corps = actifs.length ? corpsAccueil(actifs) : '<p class="legende">Aucun projet actif pour l\'instant.</p>';
   app.innerHTML = `
     <div class="playlist-ruban">
-      <div class="pl-txt"><b>Playlist YouTube de la classe</b><span>Les 18 morceaux du répertoire, à écouter d'affilée.</span></div>
+      <div class="pl-txt"><b>Playlist YouTube de la classe</b><span>Les ${actifs.length} morceaux du répertoire, à écouter d'affilée.</span></div>
       <a class="pl-btn" href="${PLAYLIST_URL}" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.5a3 3 0 0 0-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 0 0 1 7.5 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.5a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 23.5 12 31 31 0 0 0 23 7.5zM9.8 15.3V8.7l5.7 3.3z"/></svg>
         Écouter
@@ -848,7 +868,7 @@ function vueGestion(app){
         <div class="ligne"><input id="np-titre" type="text" placeholder="Titre" class="pousse"><input id="np-auteur" type="text" placeholder="Auteur / groupe" class="pousse"></div>
         <div class="ligne"><input id="np-tonalite" type="text" placeholder="Tonalité (ex. La mineur)" class="pousse"><input id="np-tempo" type="number" placeholder="Tempo (BPM)" style="width:130px"></div>
         <div class="ligne"><label style="color:var(--sub);font-size:.9rem">Univers${aide("L\'ambiance visuelle propre à ce projet : Formation Musicale (crème, sobre) ou Outrun (néon nuit). Le reste de la plateforme n\'est pas affecté.")}&nbsp;
-          <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option><option value="nuit-pastel">Nuit pastel (indigo/rose)</option><option value="disco-solaire">Disco solaire (or/magenta)</option><option value="retrowave-pastel">Retrowave pastel (corail/turquoise)</option><option value="graphique-colorblock">Graphique color-block</option><option value="jaune-soleil">Jaune soleil</option><option value="guinguette">Guinguette (brun/grenat)</option><option value="rnb-pourpre">R&amp;B pourpre</option><option value="plage-tropicale">Plage tropicale</option><option value="baroque-revolution">Baroque révolution (rouge/or)</option><option value="altrock-patine">Alt-rock patine (vert/rouille)</option><option value="britpop">Britpop (gris/bleu)</option><option value="chanson-poetique">Chanson poétique (bleu-gris)</option><option value="vitrail">Vitrail (bleu nuit/or)</option><option value="soul-vinyle">Soul vinyle (sépia/ambre)</option><option value="yeye-retro">Yéyé rétro (rouge/crème)</option><option value="jazz-nocturne">Jazz nocturne (bleu nuit/ambre)</option><option value="duo-projecteur">Duo projecteur (scène noire/or)</option></select></label>
+          <select id="np-univers"><option value="fm" selected>Formation Musicale (crème)</option><option value="outrun">Outrun / synthwave (néon)</option><option value="nuit-pastel">Nuit pastel (indigo/rose)</option><option value="disco-solaire">Disco solaire (or/magenta)</option><option value="retrowave-pastel">Retrowave pastel (corail/turquoise)</option><option value="graphique-colorblock">Graphique color-block</option><option value="jaune-soleil">Jaune soleil</option><option value="guinguette">Guinguette (brun/grenat)</option><option value="rnb-pourpre">R&amp;B pourpre</option><option value="plage-tropicale">Plage tropicale</option><option value="baroque-revolution">Baroque révolution (rouge/or)</option><option value="altrock-patine">Alt-rock patine (vert/rouille)</option><option value="britpop">Britpop (gris/bleu)</option><option value="chanson-poetique">Chanson poétique (bleu-gris)</option><option value="vitrail">Vitrail (bleu nuit/or)</option><option value="soul-vinyle">Soul vinyle (sépia/ambre)</option><option value="yeye-retro">Yéyé rétro (rouge/crème)</option><option value="jazz-nocturne">Jazz nocturne (bleu nuit/ambre)</option><option value="duo-projecteur">Duo projecteur (scène noire/or)</option><option value="jardin-papier">Jardin de papier (vert/miel)</option><option value="nuage-vagabond">Nuage vagabond (ardoise/ambre)</option></select></label>
           <button onclick="creerProjet()">Créer</button></div>
         <p class="legende" style="margin:10px 0 0">Le projet démarre avec des rôles de base (chant, guitare, basse, batterie, clavier) que vous pourrez ajuster ensuite.</p>
       </div>
@@ -919,6 +939,7 @@ async function vueProjet(app, slug){
       <section>
         <div class="carte infos">${infos.map(([k,v])=>`<div><span class="cle">${k}</span><div class="val">${esc(v)}</div></div>`).join("")}</div>
       </section>
+      ${meta.histoire?`<section><div class="carte histoire"><span class="ss-titre">L'histoire du morceau</span><p>${esc(meta.histoire)}</p></div></section>`:""}
     <section id="pupitres"><h2>Rôles (tu peux en choisir plusieurs)${aide("Un rôle = un instrument ou une fonction (chant, guitare, technique…). Plusieurs personnes peuvent tenir le même rôle. Le niveau (indispensable / souhaitable / bonus) indique son importance pour le morceau.")}</h2><p class="legende">Plusieurs personnes peuvent tenir le même rôle.</p><div id="liste-pupitres"></div>
       <div class="carte"><span class="ss-titre">Ajouter un rôle</span><div class="ligne">
         <input id="np2-nom" type="text" placeholder="Nom du rôle (instrument, chant…)">
